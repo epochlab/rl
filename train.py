@@ -9,15 +9,15 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import TensorBoard
+
+from networks.ddqn import q_model
 
 print("Eager mode:", tf.executing_eagerly())
 
-#print(gym.envs.registry.all())
-
 # -----------------------------
+
+#print(gym.envs.registry.all())
 
 ENV_NAME = "PongNoFrameskip-v4"
 env = make_atari(ENV_NAME)
@@ -65,36 +65,11 @@ PLAYBACK = False                                # Vizualize Training
 
 # -----------------------------
 
-def q_model():
-    inputs = layers.Input(shape=(84, 84, 4,))
-
-    layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
-    layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
-    layer3 = layers.Conv2D(64, 3, strides=1, activation="relu")(layer2)
-
-    layer4 = layers.Flatten()(layer3)
-    layer5 = layers.Dense(512, activation="relu", kernel_initializer='he_uniform')(layer4)
-
-    if DEULING:
-        value = layers.Dense(1, kernel_initializer='he_uniform')(layer5)
-        value = layers.Lambda(lambda s: K.expand_dims(s[:, 0], -1), output_shape=(action_space,))(value)
-
-        adv = layers.Dense(action_space, kernel_initializer='he_uniform')(layer5)
-        adv = layers.Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_space,))(adv)
-
-        action = layers.Add()([value, adv])
-    else:
-        action = layers.Dense(action_space, activation="linear", kernel_initializer='he_uniform')(layer5)
-
-    return keras.Model(inputs=inputs, outputs=action)
-
-model = q_model()
-model.summary()
-
-model_target = q_model()
+model = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
+model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
+# model.summary()
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
-
 
 def capture(step, sequence):
     if step < 600:
@@ -142,7 +117,6 @@ def add_memory(naction, nstate, nstate_next, nterminal, nreward):
     state_next_history.append(nstate_next)
     terminal_history.append(nterminal)
     rewards_history.append(nreward)
-
 
 def sample(memory):
     indices = np.random.choice(range(len(memory)), size=BATCH_SIZE)
@@ -197,11 +171,8 @@ def evaluate(episode_id, instance):
 def render_gif(frames, filename):
     return imageio.mimsave(filename + '.gif', frames)
 
-
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 print("ID:", timestamp)
-
-
 
 log_dir = "logs/fit/"
 summary_writer = tf.summary.create_file_writer(log_dir + timestamp)
