@@ -9,6 +9,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 
+from agent import step
 from networks.ddqn import q_model
 from utils import capture, render_gif
 
@@ -88,12 +89,6 @@ def exploration(eps, nstate, step):
 
     return action, eps
 
-def step(naction):
-    state_next, reward, terminal, info = env.step(naction)
-    state_next = np.array(state_next)
-
-    return state_next, reward, terminal, info
-
 def punish(health, feedback):
     if info['ale.lives'] < health:
         life_lost = True
@@ -148,7 +143,7 @@ def evaluate(episode_id, instance):
         action = tf.argmax(action_probs[0]).numpy()
 
         # Apply the sampled action in our environment
-        state_next, reward, terminal, _ = env.step(action)
+        state_next, reward, terminal, _ = step(env, action)
         state = np.array(state_next)
 
         episode_reward += reward
@@ -205,7 +200,7 @@ while True:  # Run until solved
 
         action, EPSILON = exploration(EPSILON, state, timestep)              # Use epsilon-greedy for exploration
 
-        state_next, reward, terminal, info = step(action)                    # Apply the sampled action in our environment
+        state_next, reward, terminal, info = step(env, action)                    # Apply the sampled action in our environment
         terminal_life_lost, life = punish(life, terminal)                    # Punishment for points lost within before terminal state
 
         add_memory(action, state, state_next, terminal_life_lost, reward)    # Save actions and states in replay buffer
