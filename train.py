@@ -9,7 +9,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 
-from agent import step
+from agent import step, punish
 from networks.ddqn import q_model
 from utils import capture, render_gif
 
@@ -88,15 +88,6 @@ def exploration(eps, nstate, step):
     eps = max(eps, EPSILON_MIN)
 
     return action, eps
-
-def punish(health, feedback):
-    if info['ale.lives'] < health:
-        life_lost = True
-    else:
-        life_lost = feedback
-    health = info['ale.lives']
-
-    return life_lost, health
 
 def add_memory(naction, nstate, nstate_next, nterminal, nreward):
     action_history.append(naction)
@@ -201,7 +192,7 @@ while True:  # Run until solved
         action, EPSILON = exploration(EPSILON, state, timestep)              # Use epsilon-greedy for exploration
 
         state_next, reward, terminal, info = step(env, action)                    # Apply the sampled action in our environment
-        terminal_life_lost, life = punish(life, terminal)                    # Punishment for points lost within before terminal state
+        terminal_life_lost, life = punish(info, life, terminal)                    # Punishment for points lost within before terminal state
 
         add_memory(action, state, state_next, terminal_life_lost, reward)    # Save actions and states in replay buffer
 
