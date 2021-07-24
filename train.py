@@ -2,9 +2,7 @@
 
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 
-import gym
-import os, datetime, imageio
-
+import gym, os, datetime
 import numpy as np
 
 import tensorflow as tf
@@ -12,6 +10,7 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 
 from networks.ddqn import q_model
+from utils import capture, render_gif
 
 print("Eager mode:", tf.executing_eagerly())
 
@@ -70,13 +69,6 @@ model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 # model.summary()
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
-
-def capture(step, sequence):
-    if step < 600:
-        frame = env.render(mode='rgb_array')
-        sequence.append(frame)
-
-    return sequence
 
 def exploration(eps, nstate, step):
     if frame_count < EPSILON_RANDOM_FRAMES or eps > np.random.rand(1)[0]:
@@ -147,7 +139,7 @@ def evaluate(episode_id, instance):
     for timestep in range(1, MAX_STEPS_PER_EPISODE):
 
         # Capture gameplay experience
-        frames = capture(timestep, frames)
+        frames = capture(env, timestep, frames)
 
         # Predict action Q-values from environment state and take best action
         state_tensor = tf.convert_to_tensor(state)
@@ -167,9 +159,6 @@ def evaluate(episode_id, instance):
     render_gif(frames, log_dir + timestamp + "/" + instance + "_" + str(episode_id) + "_" + str(episode_reward))
 
     return episode_reward
-
-def render_gif(frames, filename):
-    return imageio.mimsave(filename + '.gif', frames)
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 print("ID:", timestamp)
