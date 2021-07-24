@@ -13,5 +13,4 @@ def punish(info, health, feedback):
     else:
         life_lost = feedback
     health = info['ale.lives']
-
     return life_lost, health
