@@ -9,7 +9,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 
-from agent import step, punish
+from agent import agent
 from networks.ddqn import q_model
 from utils import capture, render_gif
 
@@ -71,23 +71,7 @@ model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-def exploration(eps, nstate, step):
-    if frame_count < EPSILON_RANDOM_FRAMES or eps > np.random.rand(1)[0]:
-        action = np.random.choice(action_space)
-    else:
-        state_tensor = tf.convert_to_tensor(nstate)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = model(state_tensor, training=False)
-        action = tf.argmax(action_probs[0]).numpy()
-
-    # NOOP - Fire on first frame of episode
-    if step == 0:
-        action = 1
-
-    eps -= EPSILON_ANNEALER / EPSILON_GREEDY_FRAMES
-    eps = max(eps, EPSILON_MIN)
-
-    return action, eps
+agent = agent(model, action_space, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER)
 
 def add_memory(naction, nstate, nstate_next, nterminal, nreward):
     action_history.append(naction)
@@ -134,7 +118,7 @@ def evaluate(episode_id, instance):
         action = tf.argmax(action_probs[0]).numpy()
 
         # Apply the sampled action in our environment
-        state_next, reward, terminal, _ = step(env, action)
+        state_next, reward, terminal, _ = agent.step(env, action)
         state = np.array(state_next)
 
         episode_reward += reward
@@ -189,10 +173,10 @@ while True:  # Run until solved
 
         frame_count += 1
 
-        action, EPSILON = exploration(EPSILON, state, timestep)              # Use epsilon-greedy for exploration
+        action, EPSILON = agent.exploration(EPSILON, state, timestep, frame_count)              # Use epsilon-greedy for exploration
 
-        state_next, reward, terminal, info = step(env, action)                    # Apply the sampled action in our environment
-        terminal_life_lost, life = punish(info, life, terminal)                    # Punishment for points lost within before terminal state
+        state_next, reward, terminal, info = agent.step(env, action)                    # Apply the sampled action in our environment
+        terminal_life_lost, life = agent.punish(info, life, terminal)                    # Punishment for points lost within before terminal state
 
         add_memory(action, state, state_next, terminal_life_lost, reward)    # Save actions and states in replay buffer
 
