@@ -17,7 +17,7 @@ def dqn(input_shape, window_length, action_space):
     action = layers.Dense(action_space, activation="linear", kernel_initializer='he_uniform')(layer5)
     return keras.Model(inputs=inputs, outputs=action)
 
-def ddqn(input_shape, window_length, action_space):
+def dueling_dqn(input_shape, window_length, action_space):
     inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length,))
 
     layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
