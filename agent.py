@@ -6,23 +6,22 @@ import tensorflow as tf
 from utils import capture, render_gif
 
 class agent:
-    def __init__(self, model, action_space, max_steps_per_episode, epsilon_random_frames, epsilon_greedy_frames, epsilon_min, epsilon_annealer):
-        self.model = model
-        self.action_space = action_space
-
+    def __init__(self, action_space, max_steps_per_episode, epsilon_random_frames, epsilon_greedy_frames, epsilon_min, epsilon_annealer, update_target_network):
+        self.ACTION_SPACE = action_space
         self.MAX_STEPS_PER_EPISODE = max_steps_per_episode
         self.EPSILON_RANDOM_FRAMES = epsilon_random_frames
         self.EPSILON_GREEDY_FRAMES = epsilon_greedy_frames
         self.EPSILON_MIN = epsilon_min
         self.EPSILON_ANNEALER = epsilon_annealer
+        self.UPDATE_TARGET_NETWORK = update_target_network
 
-    def exploration(self, eps, nstate, step, frame_count):
+    def exploration(self, eps, model, nstate, step, frame_count):
         if frame_count < self.EPSILON_RANDOM_FRAMES or eps > np.random.rand(1)[0]:
-            action = np.random.choice(self.action_space)
+            action = np.random.choice(self.ACTION_SPACE)
         else:
             state_tensor = tf.convert_to_tensor(nstate)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model(state_tensor, training=False)
+            action_probs = model(state_tensor, training=False)
             action = tf.argmax(action_probs[0]).numpy()
 
         # NOOP - Fire on first frame of episode
@@ -45,7 +44,7 @@ class agent:
         health = info['ale.lives']
         return life_lost, health
 
-    def evaluate(self, env, log_dir, episode_id, instance):
+    def evaluate(self, model, env, log_dir, episode_id, instance):
         state = np.array(env.reset())
         episode_reward = 0
         frames = []
@@ -58,7 +57,7 @@ class agent:
             # Predict action Q-values from environment state and take best action
             state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = self.model(state_tensor, training=False)
+            action_probs = model(state_tensor, training=False)
             action = tf.argmax(action_probs[0]).numpy()
 
             # Apply the sampled action in our environment
@@ -71,5 +70,12 @@ class agent:
                 break
 
         render_gif(frames, log_dir + "/" + instance + "_" + str(episode_id) + "_" + str(episode_reward))
-
         return episode_reward
+
+    def update_target(self, frame_count, model, weights, model_target, target_weights, tau, dynamic):
+        if dynamic:
+            for (a, b) in zip(target_weights, weights):
+                a.assign(b * tau + a * (1 - tau))
+        else:
+            if frame_count % self.UPDATE_TARGET_NETWORK == 0:
+                model_target.set_weights(model.get_weights())

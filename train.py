@@ -81,17 +81,8 @@ model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-agent = agent(model, action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER)
+agent = agent(action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER, UPDATE_TARGET_NETWORK)
 memory = memory(BATCH_SIZE, action_history, state_history, state_next_history, rewards_history, terminal_history)
-
-@tf.function
-def update_target(target_weights, weights, ratio, dynamic):
-    if dynamic:
-        for (a, b) in zip(target_weights, weights):
-            a.assign(b * ratio + a * (1 - ratio))
-    else:
-        if frame_count % UPDATE_TARGET_NETWORK == 0:
-            model_target.set_weights(model.get_weights())
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 print("ID:", timestamp)
@@ -128,7 +119,7 @@ while True:  # Run until solved
 
         frame_count += 1
 
-        action, EPSILON = agent.exploration(EPSILON, state, timestep, frame_count)              # Use epsilon-greedy for exploration
+        action, EPSILON = agent.exploration(EPSILON, model, state, timestep, frame_count)              # Use epsilon-greedy for exploration
 
         state_next, reward, terminal, info = agent.step(env, action)                    # Apply the sampled action in our environment
         terminal_life_lost, life = agent.punish(info, life, terminal)                    # Punishment for points lost within before terminal state
@@ -172,7 +163,7 @@ while True:  # Run until solved
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
         # Update the the target network with new weights
-        update_target(model_target.trainable_variables, model.trainable_variables, TAU, True)
+        agent.update_target(frame_count, model, model.trainable_variables, model_target, model_target.trainable_variables, TAU, True)
 
         # Limit the state and reward history
         if len(rewards_history) > MAX_MEMORY_LENGTH:
@@ -202,7 +193,7 @@ while True:  # Run until solved
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if running_reward > min_reward:
         checkpoint.save(checkpoint_path)
-        eval_reward = agent.evaluate(env, (log_dir + timestamp), episode_count, "pong_DQN_test")
+        eval_reward = agent.evaluate(model, env, (log_dir + timestamp), episode_count, "pong_DQN_test")
         min_reward = running_reward + 1
 
     # Callbacks
