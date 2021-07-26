@@ -12,7 +12,6 @@ from tensorflow.keras.callbacks import TensorBoard
 from agent import agent
 from memory import memory
 from networks.ddqn import q_model
-from utils import capture, render_gif
 
 print("Eager mode:", tf.executing_eagerly())
 
@@ -82,7 +81,7 @@ model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-agent = agent(model, action_space, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER)
+agent = agent(model, action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER)
 memory = memory(BATCH_SIZE, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
 @tf.function
@@ -94,40 +93,10 @@ def update_target(target_weights, weights, ratio, dynamic):
         if frame_count % UPDATE_TARGET_NETWORK == 0:
             model_target.set_weights(model.get_weights())
 
-def evaluate(episode_id, instance):
-    state = np.array(env.reset())
-
-    episode_reward = 0
-    frames = []
-
-    for timestep in range(1, MAX_STEPS_PER_EPISODE):
-
-        # Capture gameplay experience
-        frames = capture(env, timestep, frames)
-
-        # Predict action Q-values from environment state and take best action
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = model(state_tensor, training=False)
-        action = tf.argmax(action_probs[0]).numpy()
-
-        # Apply the sampled action in our environment
-        state_next, reward, terminal, _ = agent.step(env, action)
-        state = np.array(state_next)
-
-        episode_reward += reward
-
-        if terminal:
-            break
-
-    render_gif(frames, log_dir + timestamp + "/" + instance + "_" + str(episode_id) + "_" + str(episode_reward))
-
-    return episode_reward
-
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 print("ID:", timestamp)
 
-log_dir = "logs/fit/"
+log_dir = "metrics/"
 summary_writer = tf.summary.create_file_writer(log_dir + timestamp)
 
 command = "tensorboard --logdir=" + str(log_dir) + " --port=6006 &"
@@ -136,7 +105,7 @@ os.system(command)
 tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 checkpoint = tf.train.Checkpoint(model)
-checkpoint_path = "training_checkpoints/" + timestamp + "/training_checkpoints"
+checkpoint_path = log_dir + timestamp + "/saved_models/ckpt"
 
 running_reward = 0
 episode_count = 0
@@ -233,7 +202,7 @@ while True:  # Run until solved
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if running_reward > min_reward:
         checkpoint.save(checkpoint_path)
-        eval_reward = evaluate(episode_count, "pong_DQN_test")
+        eval_reward = agent.evaluate(env, (log_dir + timestamp), episode_count, "pong_DQN_test")
         min_reward = running_reward + 1
 
     # Callbacks
