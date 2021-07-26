@@ -7,11 +7,12 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import TensorBoard
+# from tensorflow.keras.callbacks import TensorBoard
 
 from agent import agent
 from memory import memory
 from networks.ddqn import q_model
+from utils import log
 
 print("Eager mode:", tf.executing_eagerly())
 
@@ -75,6 +76,15 @@ episode_reward_history = []
 
 # -----------------------------
 
+frame_count = 0
+episode_count = 0
+
+running_reward = 0
+eval_reward = 0
+min_reward = -21
+
+# -----------------------------
+
 model = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 # model.summary()
@@ -84,26 +94,9 @@ optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 agent = agent(action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER, UPDATE_TARGET_NETWORK)
 memory = memory(BATCH_SIZE, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
-timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-print("ID:", timestamp)
+timestamp, log_dir, summary_writer, checkpoint = log(model)
 
-log_dir = "metrics/"
-summary_writer = tf.summary.create_file_writer(log_dir + timestamp)
-
-command = "tensorboard --logdir=" + str(log_dir) + " --port=6006 &"
-os.system(command)
-
-tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
-
-checkpoint = tf.train.Checkpoint(model)
-checkpoint_path = log_dir + timestamp + "/saved_models/ckpt"
-
-running_reward = 0
-episode_count = 0
-frame_count = 0
-
-min_reward = -21
-eval_reward = -21
+# -----------------------------
 
 while True:  # Run until solved
     state = np.array(env.reset())
@@ -115,23 +108,19 @@ while True:  # Run until solved
     for timestep in range(1, MAX_STEPS_PER_EPISODE):
 
         if PLAYBACK:
-            env.render();                                                    # View training in real-time
-
-        frame_count += 1
+            env.render();                                                                              # View training in real-time
 
         action, EPSILON = agent.exploration(EPSILON, model, state, timestep, frame_count)              # Use epsilon-greedy for exploration
 
-        state_next, reward, terminal, info = agent.step(env, action)                    # Apply the sampled action in our environment
-        terminal_life_lost, life = agent.punish(info, life, terminal)                    # Punishment for points lost within before terminal state
+        state_next, reward, terminal, info = agent.step(env, action)                                    # Apply the sampled action in our environment
+        terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
 
-        memory.add_memory(action, state, state_next, terminal_life_lost, reward)    # Save actions and states in replay buffer
+        memory.add_memory(action, state, state_next, terminal_life_lost, reward)                        # Save actions and states in replay buffer
 
-        episode_reward += reward                                             # Update running reward
-        state = state_next                                                   # Update state
+        episode_reward += reward                                                                        # Update running reward
+        state = state_next                                                                              # Update state
+        frame_count += 1
 
-        #############
-        ### TRAIN ###
-        #############
         # Update every fourth frame and once batch size is over 32
         if frame_count % UPDATE_AFTER_ACTIONS == 0 and len(terminal_history) > BATCH_SIZE:
 
@@ -156,7 +145,7 @@ while True:  # Run until solved
             with tf.GradientTape() as tape:
                 q_values = model(state_sample)                                           # Train the model on the states and updated Q-values
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)           # Apply the masks to the Q-values to get the Q-value for action taken
-                loss = keras.losses.Huber()(q_samp, q_action)                              # Calculate loss between new Q-value and old Q-value
+                loss = keras.losses.Huber()(q_samp, q_action)                            # Calculate loss between new Q-value and old Q-value
 
             # Backpropagation
             grads = tape.gradient(loss, model.trainable_variables)
@@ -187,12 +176,9 @@ while True:  # Run until solved
         del episode_reward_history[:1]
     running_reward = np.mean(episode_reward_history)
 
-    ############
-    ### TEST ###
-    ############
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if running_reward > min_reward:
-        checkpoint.save(checkpoint_path)
+        checkpoint.save(log_dir + timestamp + "/saved_models/ckpt")
         eval_reward = agent.evaluate(model, env, (log_dir + timestamp), episode_count, "pong_DQN_test")
         min_reward = running_reward + 1
 
