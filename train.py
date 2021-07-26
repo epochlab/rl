@@ -155,7 +155,6 @@ while True:  # Run until solved
         agent.update_target(frame_count, model, model.trainable_variables, model_target, model_target.trainable_variables, TAU, True)
 
         memory.limit(len(rewards_history))
-        print(len(rewards_history))
 
         if terminal:
             break
