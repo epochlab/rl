@@ -10,6 +10,7 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import TensorBoard
 
 from agent import agent
+from memory import memory
 from networks.ddqn import q_model
 from utils import capture, render_gif
 
@@ -65,6 +66,16 @@ PLAYBACK = False                                # Vizualize Training
 
 # -----------------------------
 
+# Experience replay buffers
+action_history = []
+state_history = []
+state_next_history = []
+rewards_history = []
+terminal_history = []
+episode_reward_history = []
+
+# -----------------------------
+
 model = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 # model.summary()
@@ -72,24 +83,7 @@ model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
 agent = agent(model, action_space, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER)
-
-def add_memory(naction, nstate, nstate_next, nterminal, nreward):
-    action_history.append(naction)
-    state_history.append(nstate)
-    state_next_history.append(nstate_next)
-    terminal_history.append(nterminal)
-    rewards_history.append(nreward)
-
-def sample(memory):
-    indices = np.random.choice(range(len(memory)), size=BATCH_SIZE)
-
-    state_sample = np.array([state_history[i] for i in indices])
-    state_next_sample = np.array([state_next_history[i] for i in indices])
-    rewards_sample = [rewards_history[i] for i in indices]
-    action_sample = [action_history[i] for i in indices]
-    terminal_sample = tf.convert_to_tensor([float(memory[i]) for i in indices])
-
-    return state_sample, state_next_sample, rewards_sample, action_sample, terminal_sample
+memory = memory(BATCH_SIZE, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
 @tf.function
 def update_target(target_weights, weights, ratio, dynamic):
@@ -144,14 +138,6 @@ tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 checkpoint = tf.train.Checkpoint(model)
 checkpoint_path = "training_checkpoints/" + timestamp + "/training_checkpoints"
 
-# Experience replay buffers
-action_history = []
-state_history = []
-state_next_history = []
-rewards_history = []
-terminal_history = []
-episode_reward_history = []
-
 running_reward = 0
 episode_count = 0
 frame_count = 0
@@ -178,7 +164,7 @@ while True:  # Run until solved
         state_next, reward, terminal, info = agent.step(env, action)                    # Apply the sampled action in our environment
         terminal_life_lost, life = agent.punish(info, life, terminal)                    # Punishment for points lost within before terminal state
 
-        add_memory(action, state, state_next, terminal_life_lost, reward)    # Save actions and states in replay buffer
+        memory.add_memory(action, state, state_next, terminal_life_lost, reward)    # Save actions and states in replay buffer
 
         episode_reward += reward                                             # Update running reward
         state = state_next                                                   # Update state
@@ -190,7 +176,7 @@ while True:  # Run until solved
         if frame_count % UPDATE_AFTER_ACTIONS == 0 and len(terminal_history) > BATCH_SIZE:
 
             # Sample from replay buffer
-            state_sample, state_next_sample, rewards_sample, action_sample, terminal_sample = sample(terminal_history)
+            state_sample, state_next_sample, rewards_sample, action_sample, terminal_sample = memory.sample(terminal_history)
 
             # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
             q = model.predict(state_next_sample)
