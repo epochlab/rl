@@ -15,9 +15,8 @@ def render_gif(frames, filename):
     return imageio.mimsave(filename + '.gif', frames)
 
 def log(model):
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    print("ID:", timestamp)
     log_dir = "metrics/"
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     summary_writer = tf.summary.create_file_writer(log_dir + timestamp)
     checkpoint = tf.train.Checkpoint(model)

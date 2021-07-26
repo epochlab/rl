@@ -95,6 +95,7 @@ agent = agent(action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILO
 memory = memory(BATCH_SIZE, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
 timestamp, log_dir, summary_writer, checkpoint = log(model)
+print("Job ID:", timestamp)
 
 # -----------------------------
 
