@@ -10,7 +10,7 @@ from tensorflow import keras
 
 from agent import agent
 from memory import memory
-from networks import ddqn
+from networks import dqn, ddqn
 from utils import log
 
 print("Eager mode:", tf.executing_eagerly())
@@ -84,9 +84,9 @@ min_reward = -21
 
 # -----------------------------
 
-model = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
-model_target = q_model(DEULING, INPUT_SHAPE, WINDOW_LENGTH, action_space)
-# model.summary()
+model = ddqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
+model_target = ddqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
+model.summary()
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
