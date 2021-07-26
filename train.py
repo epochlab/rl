@@ -7,11 +7,10 @@ import numpy as np
 
 import tensorflow as tf
 from tensorflow import keras
-# from tensorflow.keras.callbacks import TensorBoard
 
 from agent import agent
 from memory import memory
-from networks.ddqn import q_model
+from networks import ddqn
 from utils import log
 
 print("Eager mode:", tf.executing_eagerly())
