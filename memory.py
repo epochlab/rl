@@ -4,8 +4,10 @@ import numpy as np
 import tensorflow as tf
 
 class memory:
-    def __init__(self, batch_size, action_history, state_history, state_next_history, rewards_history, terminal_history):
+    def __init__(self, batch_size, max_memory_length, action_history, state_history, state_next_history, rewards_history, terminal_history):
         self.BATCH_SIZE = batch_size
+        self.MAX_MEMORY_LENGTH = max_memory_length
+
         self.action_history = action_history
         self.state_history = state_history
         self.state_next_history = state_next_history
@@ -27,5 +29,12 @@ class memory:
         state_next_sample = np.array([self.state_next_history[i] for i in indices])
         rewards_sample = [self.rewards_history[i] for i in indices]
         terminal_sample = tf.convert_to_tensor([float(memory[i]) for i in indices])
-
         return state_sample, state_next_sample, rewards_sample, action_sample, terminal_sample
+
+    def limit(self, length):
+        if length > self.MAX_MEMORY_LENGTH:
+            del self.action_history[:1]
+            del self.state_history[:1]
+            del self.state_next_history[:1]
+            del self.rewards_history[:1]
+            del self.terminal_history[:1]

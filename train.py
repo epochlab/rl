@@ -10,7 +10,7 @@ from tensorflow import keras
 
 from agent import agent
 from memory import memory
-from networks import dqn, ddqn
+from networks import dqn, dueling_dqn
 from utils import log
 
 print("Eager mode:", tf.executing_eagerly())
@@ -44,7 +44,7 @@ env.unwrapped.get_action_meanings()
 BATCH_SIZE = 32                                 # Size of batch taken from replay buffer
 MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
 
-MAX_MEMORY_LENGTH = 1000000                     # Maximum replay length
+MAX_MEMORY_LENGTH = 100                     # Maximum replay length - Train for: 1000000
 UPDATE_AFTER_ACTIONS = 4                        # Train the model after 4 actions
 
 EPSILON_RANDOM_FRAMES = 50000                   # Number of frames to take random action and observe output
@@ -84,14 +84,14 @@ min_reward = -21
 
 # -----------------------------
 
-model = ddqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
-model_target = ddqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
+model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
+model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model.summary()
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
 agent = agent(action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER, UPDATE_TARGET_NETWORK)
-memory = memory(BATCH_SIZE, action_history, state_history, state_next_history, rewards_history, terminal_history)
+memory = memory(BATCH_SIZE, MAX_MEMORY_LENGTH, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
 timestamp, log_dir, summary_writer, checkpoint = log(model)
 print("Job ID:", timestamp)
@@ -154,18 +154,8 @@ while True:  # Run until solved
         # Update the the target network with new weights
         agent.update_target(frame_count, model, model.trainable_variables, model_target, model_target.trainable_variables, TAU, True)
 
-        # Limit the state and reward history
-        if len(rewards_history) > MAX_MEMORY_LENGTH:
-            del rewards_history[:1]
-            del state_history[:1]
-            del state_next_history[:1]
-            del action_history[:1]
-            del terminal_history[:1]
-
-        # Log details
-        if frame_count % MAX_STEPS_PER_EPISODE == 0:
-            template = "running reward: {:.2f} at episode {}, frame count {}"
-            print(template.format(running_reward, episode_count, frame_count))
+        memory.limit(len(rewards_history))
+        print(len(rewards_history))
 
         if terminal:
             break
