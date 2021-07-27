@@ -82,7 +82,7 @@ while True:  # Run until solved
 
         # Update the the target network with new weights
         if DYNAMIC:
-            memory.dynamic_target(model_target.trainable_variables, model.trainable_variables, TAU)
+            memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
         else:
             memory.update_target(frame_count, model, model_target)
 
