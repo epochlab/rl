@@ -11,14 +11,15 @@ class agent:
         self.ACTION_SPACE = action_space
         self.MAX_STEPS_PER_EPISODE = max_steps_per_episode
 
+        self.EPSILON = 1.0
         self.EPSILON_RANDOM_FRAMES = 50000
         self.EPSILON_GREEDY_FRAMES = 1000000.0
         self.EPSILON_MIN = 0.1
         self.EPSILON_MAX = 1.0
         self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
 
-    def exploration(self, eps, model, nstate, step, frame_count):
-        if frame_count < self.EPSILON_RANDOM_FRAMES or eps > np.random.rand(1)[0]:
+    def exploration(self, model, nstate, timestep, frame_count):
+        if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
             action = np.random.choice(self.ACTION_SPACE)
         else:
             state_tensor = tf.convert_to_tensor(nstate)
@@ -27,12 +28,12 @@ class agent:
             action = tf.argmax(action_probs[0]).numpy()
 
         # NOOP - Fire on first frame of episode
-        if step == 0:
+        if timestep == 0:
             action = 1
 
-        eps -= self.EPSILON_ANNEALER / self.EPSILON_GREEDY_FRAMES
-        eps = max(eps, self.EPSILON_MIN)
-        return action, eps
+        self.EPSILON -= self.EPSILON_ANNEALER / self.EPSILON_GREEDY_FRAMES
+        self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)
+        return action
 
     def step(self, naction):
         state_next, reward, terminal, info = self.ENV.step(naction)
