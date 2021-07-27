@@ -31,8 +31,8 @@ class memory:
         terminal_sample = tf.convert_to_tensor([float(memory[i]) for i in indices])
         return state_sample, state_next_sample, rewards_sample, action_sample, terminal_sample
 
-    def limit(self, length):
-        if length > self.MAX_MEMORY_LENGTH:
+    def limit(self, history):
+        if history > self.MAX_MEMORY_LENGTH:
             del self.action_history[:1]
             del self.state_history[:1]
             del self.state_next_history[:1]
