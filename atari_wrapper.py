@@ -2,7 +2,7 @@
 
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 
-def build_sandbox(env_name):
+def build_env(env_name):
     env = make_atari(env_name)
     env = wrap_deepmind(env, frame_stack=True, scale=True)                      # Warp the frames, grey scale, stake four frame and scale to smaller ratio
     env.seed(1)

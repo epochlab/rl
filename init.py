@@ -4,7 +4,7 @@ import numpy as np
 
 import tensorflow as tf
 
-from atari_wrapper import build_sandbox
+from atari_wrapper import build_env
 from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
@@ -17,7 +17,7 @@ print("Eager mode:", tf.executing_eagerly())
 #print(gym.envs.registry.all())
 
 ENV_NAME = "PongNoFrameskip-v4"
-env, action_space = build_sandbox(ENV_NAME)
+env, action_space = build_env(ENV_NAME)
 
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
