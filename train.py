@@ -11,7 +11,7 @@ from tensorflow import keras
 from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
-from utils import log
+from utils import log_feedback
 
 print("Eager mode:", tf.executing_eagerly())
 
@@ -44,19 +44,11 @@ env.unwrapped.get_action_meanings()
 BATCH_SIZE = 32                                 # Size of batch taken from replay buffer
 MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
 
-MAX_MEMORY_LENGTH = 100                     # Maximum replay length - Train for: 1000000
+MAX_MEMORY_LENGTH = 1000000                     # Maximum replay length - Train for: 1000000
 UPDATE_AFTER_ACTIONS = 4                        # Train the model after 4 actions
-
-EPSILON_RANDOM_FRAMES = 50000                   # Number of frames to take random action and observe output
-EPSILON_GREEDY_FRAMES = 1000000.0               # Number of frames for exploration
 
 GAMMA = 0.99                                    # Discount factor for past rewards
 EPSILON = 1.0                                   # Epsilon greedy parameter
-EPSILON_MIN = 0.1                               # Minimum epsilon greedy parameter
-EPSILON_MAX = 1.0                               # Maximum epsilon greedy parameter
-EPSILON_ANNEALER = (EPSILON_MAX - EPSILON_MIN)  # Rate at which to reduce chance of random action being taken
-
-UPDATE_TARGET_NETWORK = 10000                   # How often to update the target network
 TAU = 0.08                                      # Dynamic update factor
 
 DOUBLE = True                                   # Double DQN
@@ -90,10 +82,10 @@ model.summary()
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-agent = agent(action_space, MAX_STEPS_PER_EPISODE, EPSILON_RANDOM_FRAMES, EPSILON_GREEDY_FRAMES, EPSILON_MIN, EPSILON_ANNEALER, UPDATE_TARGET_NETWORK)
+agent = agent(action_space, MAX_STEPS_PER_EPISODE)
 memory = memory(BATCH_SIZE, MAX_MEMORY_LENGTH, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
-timestamp, log_dir, summary_writer, checkpoint = log(model)
+timestamp, log_dir, summary_writer, checkpoint = log_feedback(model)
 print("Job ID:", timestamp)
 
 # -----------------------------

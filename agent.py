@@ -6,14 +6,16 @@ import tensorflow as tf
 from utils import capture, render_gif
 
 class agent:
-    def __init__(self, action_space, max_steps_per_episode, epsilon_random_frames, epsilon_greedy_frames, epsilon_min, epsilon_annealer, update_target_network):
+    def __init__(self, action_space, max_steps_per_episode):
         self.ACTION_SPACE = action_space
         self.MAX_STEPS_PER_EPISODE = max_steps_per_episode
-        self.EPSILON_RANDOM_FRAMES = epsilon_random_frames
-        self.EPSILON_GREEDY_FRAMES = epsilon_greedy_frames
-        self.EPSILON_MIN = epsilon_min
-        self.EPSILON_ANNEALER = epsilon_annealer
-        self.UPDATE_TARGET_NETWORK = update_target_network
+
+        self.EPSILON_RANDOM_FRAMES = 50000
+        self.EPSILON_GREEDY_FRAMES = 1000000.0
+        self.EPSILON_MIN = 0.1
+        self.EPSILON_MAX = 1.0
+        self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
+        self.UPDATE_TARGET_NETWORK = 10000
 
     def exploration(self, eps, model, nstate, step, frame_count):
         if frame_count < self.EPSILON_RANDOM_FRAMES or eps > np.random.rand(1)[0]:
