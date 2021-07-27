@@ -14,8 +14,7 @@ def capture(env, step, sequence):
 def render_gif(frames, filename):
     return imageio.mimsave(filename + '.gif', frames)
 
-def log_feedback(model):
-    log_dir = "metrics/"
+def log_feedback(model, log_dir):
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     summary_writer = tf.summary.create_file_writer(log_dir + timestamp)
@@ -23,4 +22,4 @@ def log_feedback(model):
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
     os.system("tensorboard --logdir=" + str(log_dir) + " --port=6006 &")
-    return timestamp, log_dir, summary_writer, checkpoint
+    return timestamp, summary_writer, checkpoint

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-from baselines.common.atari_wrappers import make_atari, wrap_deepmind
-
-import gym, os, datetime
 import numpy as np
 
 import tensorflow as tf
 from tensorflow import keras
 
+from environment import build_atari
 from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
@@ -20,26 +18,10 @@ print("Eager mode:", tf.executing_eagerly())
 #print(gym.envs.registry.all())
 
 ENV_NAME = "PongNoFrameskip-v4"
-env = make_atari(ENV_NAME)
+env, action_space = build_atari(ENV_NAME)
 
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
-
-# Warp the frames, grey scale, stake four frame and scale to smaller ratio
-env = wrap_deepmind(env, frame_stack=True, scale=True)
-env.seed(1)
-
-screen_space = env.observation_space
-num_states = env.observation_space.shape
-action_space = env.action_space.n
-
-print('Frame:', screen_space)
-print('States:', num_states[0])
-print('Actions:', action_space)
-
-env.unwrapped.get_action_meanings()
-
-# -----------------------------
 
 BATCH_SIZE = 32                                 # Size of batch taken from replay buffer
 MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
@@ -56,6 +38,8 @@ TAU = 0.08                                      # Dynamic update factor
 
 PLAYBACK = False                                # Vizualize Training
 
+log_dir = "metrics/"
+
 # -----------------------------
 
 # Experience replay buffers
@@ -71,8 +55,8 @@ episode_reward_history = []
 frame_count = 0
 episode_count = 0
 
-running_reward = 0
-eval_reward = 0
+running_reward = -21
+eval_reward = -21
 min_reward = -21
 
 # -----------------------------
@@ -86,7 +70,7 @@ optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
 memory = memory(BATCH_SIZE, MAX_MEMORY_LENGTH, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
-timestamp, log_dir, summary_writer, checkpoint = log_feedback(model)
+timestamp, summary_writer, checkpoint = log_feedback(model, log_dir)
 print("Job ID:", timestamp)
 
 # -----------------------------
