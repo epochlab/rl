@@ -5,8 +5,8 @@ import os, datetime, imageio
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
-def capture(env, step, sequence):
-    if step < 600:
+def capture(env, timestep, sequence):
+    if timestep < 600:
         frame = env.render(mode='rgb_array')
         sequence.append(frame)
     return sequence

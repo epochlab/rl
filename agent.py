@@ -18,7 +18,7 @@ class agent:
         self.EPSILON_MAX = 1.0
         self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
 
-    def exploration(self, model, nstate, timestep, frame_count):
+    def exploration(self, frame_count, nstate, model):
         if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
             action = np.random.choice(self.ACTION_SPACE)
         else:
@@ -26,10 +26,6 @@ class agent:
             state_tensor = tf.expand_dims(state_tensor, 0)
             action_probs = model(state_tensor, training=False)
             action = tf.argmax(action_probs[0]).numpy()
-
-        # NOOP - Fire on first frame of episode
-        if timestep == 0:
-            action = 1
 
         self.EPSILON -= self.EPSILON_ANNEALER / self.EPSILON_GREEDY_FRAMES
         self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)

@@ -12,6 +12,7 @@ class memory:
         self.UPDATE_AFTER_ACTIONS = 4
         self.GAMMA = 0.99
         self.UPDATE_TARGET_NETWORK = 10000
+        self.TAU = 0.08
 
         self.action_history = []
         self.state_history = []
@@ -19,7 +20,7 @@ class memory:
         self.rewards_history = []
         self.terminal_history = []
 
-    def add_memory(self, naction, nstate, nstate_next, nterminal, nreward):
+    def add_memory(self, naction, nstate, nstate_next, nreward, nterminal):
         self.action_history.append(naction)
         self.state_history.append(nstate)
         self.state_next_history.append(nstate_next)
@@ -78,6 +79,6 @@ class memory:
         if frame_count % self.UPDATE_TARGET_NETWORK == 0:
             model_target.set_weights(model.get_weights())
 
-    def dynamic_target(self, target_weights, weights, tau):
+    def dynamic_target(self, target_weights, weights):
         for (a, b) in zip(target_weights, weights):
-            a.assign(b * tau + a * (1 - tau))
+            a.assign(b * self.TAU + a * (1 - self.TAU))

@@ -3,7 +3,6 @@
 import numpy as np
 
 import tensorflow as tf
-from tensorflow import keras
 
 from environment import build_atari
 from agent import agent
@@ -26,8 +25,6 @@ MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
 
 DOUBLE = True                                   # Double DQN
 DYNAMIC = True                                  # Dynamic update
-TAU = 0.08                                      # Factor
-
 PLAYBACK = False                                # Vizualize Training
 
 log_dir = "metrics/"
@@ -38,7 +35,7 @@ model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 # model.summary()
 
-optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
 agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
 memory = memory(action_space)
@@ -62,26 +59,26 @@ while True:  # Run until solved
     state = np.array(env.reset())
 
     episode_reward = 0
-    terminal_life_lost = True
     life = 0
+    terminal_life_lost = True
 
     for timestep in range(1, MAX_STEPS_PER_EPISODE):
 
         if PLAYBACK:
             env.render();                                                                               # View training in real-time
 
-        action = agent.exploration(model, state, timestep, frame_count)                                 # Use epsilon-greedy for exploration
+        action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
 
         state_next, reward, terminal, info = agent.step(action)                                         # Apply the sampled action in our environment
         terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
 
-        memory.add_memory(action, state, state_next, terminal_life_lost, reward)                        # Save actions and states in replay buffer
+        memory.add_memory(action, state, state_next, reward, terminal_life_lost)                        # Save actions and states in replay buffer
 
         episode_reward += reward                                                                        # Update running reward
         state = state_next                                                                              # Update state
         frame_count += 1
 
-        loss = memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                        # Update every fourth frame and once batch size is over 32
+        loss = memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                        # Learn every fourth frame and once batch size is over 32
 
         # Update the the target network with new weights
         if DYNAMIC:
