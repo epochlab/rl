@@ -3,7 +3,7 @@
 **Project ID:** 0CxFIFGp
 
 #### Reinforcement Learning
-Abstract: *Reinforcement learning (RL) is an field of computer science concerned with how agents, using trial and error, learn to choose specific actions within an environment in order to maximize a reward signal.*
+Abstract: *Reinforcement learning (RL) is the field of computer science concerned with how agents, using trial and error, learn to choose specific actions within an environment in order to maximize a reward signal.*
 
 ### Packages
 
