@@ -6,7 +6,8 @@ import tensorflow as tf
 from utils import capture, render_gif
 
 class agent:
-    def __init__(self, action_space, max_steps_per_episode):
+    def __init__(self, env, action_space, max_steps_per_episode):
+        self.ENV = env
         self.ACTION_SPACE = action_space
         self.MAX_STEPS_PER_EPISODE = max_steps_per_episode
 
@@ -34,8 +35,8 @@ class agent:
         eps = max(eps, self.EPSILON_MIN)
         return action, eps
 
-    def step(self, env, naction):
-        state_next, reward, terminal, info = env.step(naction)
+    def step(self, naction):
+        state_next, reward, terminal, info = self.ENV.step(naction)
         return np.array(state_next), reward, terminal, info
 
     def punish(self, info, health, feedback):
@@ -46,15 +47,15 @@ class agent:
         health = info['ale.lives']
         return life_lost, health
 
-    def evaluate(self, model, env, log_dir, episode_id, instance):
-        state = np.array(env.reset())
+    def evaluate(self, model, log_dir, episode_id):
+        state = np.array(self.ENV.reset())
         episode_reward = 0
         frames = []
 
         for timestep in range(1, self.MAX_STEPS_PER_EPISODE):
 
             # Capture gameplay experience
-            frames = capture(env, timestep, frames)
+            frames = capture(self.ENV, timestep, frames)
 
             # Predict action Q-values from environment state and take best action
             state_tensor = tf.convert_to_tensor(state)
@@ -63,7 +64,7 @@ class agent:
             action = tf.argmax(action_probs[0]).numpy()
 
             # Apply the sampled action in our environment
-            state_next, reward, terminal, _ = self.step(env, action)
+            state_next, reward, terminal, _ = self.step(action)
             state = np.array(state_next)
 
             episode_reward += reward
@@ -71,13 +72,13 @@ class agent:
             if terminal:
                 break
 
-        render_gif(frames, log_dir + "/" + instance + "_" + str(episode_id) + "_" + str(episode_reward))
+        render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
 
-    def update_target(self, frame_count, model, weights, model_target, target_weights, tau, dynamic):
-        if dynamic:
-            for (a, b) in zip(target_weights, weights):
-                a.assign(b * tau + a * (1 - tau))
-        else:
-            if frame_count % self.UPDATE_TARGET_NETWORK == 0:
-                model_target.set_weights(model.get_weights())
+    def update_target(self, frame_count, model, model_target):
+        if frame_count % self.UPDATE_TARGET_NETWORK == 0:
+            model_target.set_weights(model.get_weights())
+
+    def dynamic_target(self, target_weights, weights, tau):
+        for (a, b) in zip(target_weights, weights):
+            a.assign(b * tau + a * (1 - tau))

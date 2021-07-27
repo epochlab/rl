@@ -45,14 +45,15 @@ BATCH_SIZE = 32                                 # Size of batch taken from repla
 MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
 
 MAX_MEMORY_LENGTH = 1000000                     # Maximum replay length - Train for: 1000000
+
+EPSILON = 1.0                                   # Epsilon greedy parameter
+GAMMA = 0.99                                    # Discount factor for past rewards
 UPDATE_AFTER_ACTIONS = 4                        # Train the model after 4 actions
 
-GAMMA = 0.99                                    # Discount factor for past rewards
-EPSILON = 1.0                                   # Epsilon greedy parameter
+DOUBLE = True                                   # Double DQN
+DYNAMIC = True
 TAU = 0.08                                      # Dynamic update factor
 
-DOUBLE = True                                   # Double DQN
-DEULING = True                                  # Deuling DQN
 PLAYBACK = False                                # Vizualize Training
 
 # -----------------------------
@@ -78,11 +79,11 @@ min_reward = -21
 
 model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
-model.summary()
+# model.summary()
 
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-agent = agent(action_space, MAX_STEPS_PER_EPISODE)
+agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
 memory = memory(BATCH_SIZE, MAX_MEMORY_LENGTH, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
 timestamp, log_dir, summary_writer, checkpoint = log_feedback(model)
@@ -104,7 +105,7 @@ while True:  # Run until solved
 
         action, EPSILON = agent.exploration(EPSILON, model, state, timestep, frame_count)              # Use epsilon-greedy for exploration
 
-        state_next, reward, terminal, info = agent.step(env, action)                                    # Apply the sampled action in our environment
+        state_next, reward, terminal, info = agent.step(action)                                    # Apply the sampled action in our environment
         terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
 
         memory.add_memory(action, state, state_next, terminal_life_lost, reward)                        # Save actions and states in replay buffer
@@ -144,7 +145,10 @@ while True:  # Run until solved
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
         # Update the the target network with new weights
-        agent.update_target(frame_count, model, model.trainable_variables, model_target, model_target.trainable_variables, TAU, True)
+        if DYNAMIC:
+            agent.dynamic_target(model_target.trainable_variables, model.trainable_variables, TAU)
+        else:
+            agent.update_target(frame_count, model, model_target)
 
         memory.limit(len(rewards_history))
 
@@ -160,7 +164,7 @@ while True:  # Run until solved
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if running_reward > min_reward:
         checkpoint.save(log_dir + timestamp + "/saved_models/ckpt")
-        eval_reward = agent.evaluate(model, env, (log_dir + timestamp), episode_count, "pong_DQN_test")
+        eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward + 1
 
     # Callbacks
