@@ -16,6 +16,8 @@ class agent:
         self.EPSILON_MIN = 0.1
         self.EPSILON_MAX = 1.0
         self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
+
+        self.GAMMA = 0.99
         self.UPDATE_TARGET_NETWORK = 10000
 
     def exploration(self, eps, model, nstate, step, frame_count):

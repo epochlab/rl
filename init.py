@@ -29,7 +29,6 @@ MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
 MAX_MEMORY_LENGTH = 1000000                     # Maximum replay length - Train for: 1000000
 
 EPSILON = 1.0                                   # Epsilon greedy parameter
-GAMMA = 0.99                                    # Discount factor for past rewards
 UPDATE_AFTER_ACTIONS = 4                        # Train the model after 4 actions
 
 DOUBLE = True                                   # Double DQN
@@ -68,7 +67,7 @@ model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
 agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
-memory = memory(BATCH_SIZE, MAX_MEMORY_LENGTH, action_history, state_history, state_next_history, rewards_history, terminal_history)
+memory = memory(BATCH_SIZE, MAX_MEMORY_LENGTH, action_space, action_history, state_history, state_next_history, rewards_history, terminal_history)
 
 timestamp, summary_writer, checkpoint = log_feedback(model, log_dir)
 print("Job ID:", timestamp)
@@ -100,33 +99,7 @@ while True:  # Run until solved
 
         # Update every fourth frame and once batch size is over 32
         if frame_count % UPDATE_AFTER_ACTIONS == 0 and len(terminal_history) > BATCH_SIZE:
-
-            # Sample from replay buffer
-            state_sample, state_next_sample, rewards_sample, action_sample, terminal_sample = memory.sample(terminal_history)
-
-            # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
-            q = model.predict(state_next_sample)
-            target_q = model_target.predict(state_next_sample)
-
-            # Build the updated Q-values for the sampled future states - DQN / DDQN
-            if DOUBLE:
-                max_q = tf.argmax(q, axis=1)
-                max_actions = tf.one_hot(max_q, action_space)
-                q_samp = rewards_sample + GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
-            else:
-                q_samp = rewards_sample + GAMMA * tf.reduce_max(target_q, axis=1)        # Bellman Equation
-
-            q_samp = q_samp * (1 - terminal_sample) - terminal_sample                    # If final frame set the last value to -1
-            masks = tf.one_hot(action_sample, action_space)                              # Create a mask so we only calculate loss on the updated Q-values
-
-            with tf.GradientTape() as tape:
-                q_values = model(state_sample)                                           # Train the model on the states and updated Q-values
-                q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)           # Apply the masks to the Q-values to get the Q-value for action taken
-                loss = keras.losses.Huber()(q_samp, q_action)                            # Calculate loss between new Q-value and old Q-value
-
-            # Backpropagation
-            grads = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(grads, model.trainable_variables))
+            loss = memory.learn(terminal_history, model, model_target, optimizer, DOUBLE)
 
         # Update the the target network with new weights
         if DYNAMIC:
