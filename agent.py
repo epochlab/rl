@@ -17,9 +17,6 @@ class agent:
         self.EPSILON_MAX = 1.0
         self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
 
-        self.GAMMA = 0.99
-        self.UPDATE_TARGET_NETWORK = 10000
-
     def exploration(self, eps, model, nstate, step, frame_count):
         if frame_count < self.EPSILON_RANDOM_FRAMES or eps > np.random.rand(1)[0]:
             action = np.random.choice(self.ACTION_SPACE)
@@ -76,11 +73,3 @@ class agent:
 
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
-
-    def update_target(self, frame_count, model, model_target):
-        if frame_count % self.UPDATE_TARGET_NETWORK == 0:
-            model_target.set_weights(model.get_weights())
-
-    def dynamic_target(self, target_weights, weights, tau):
-        for (a, b) in zip(target_weights, weights):
-            a.assign(b * tau + a * (1 - tau))

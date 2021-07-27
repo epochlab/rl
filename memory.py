@@ -71,3 +71,11 @@ class memory:
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
         return loss
+
+    def update_target(self, frame_count, model, model_target):
+        if frame_count % self.UPDATE_TARGET_NETWORK == 0:
+            model_target.set_weights(model.get_weights())
+
+    def dynamic_target(self, target_weights, weights, tau):
+        for (a, b) in zip(target_weights, weights):
+            a.assign(b * tau + a * (1 - tau))
