@@ -14,7 +14,7 @@ def capture(env, step, sequence):
 def render_gif(frames, filename):
     return imageio.mimsave(filename + '.gif', frames)
 
-def log(model):
+def log_feedback(model):
     log_dir = "metrics/"
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
