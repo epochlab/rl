@@ -68,10 +68,8 @@ while True:  # Run until solved
             env.render();                                                                               # View training in real-time
 
         action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
-
         state_next, reward, terminal, info = agent.step(action)                                         # Apply the sampled action in our environment
         terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
-
         memory.add_memory(action, state, state_next, reward, terminal_life_lost)                        # Save actions and states in replay buffer
 
         episode_reward += reward                                                                        # Update running reward
@@ -80,8 +78,7 @@ while True:  # Run until solved
 
         loss = memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                        # Learn every fourth frame and once batch size is over 32
 
-        # Update the the target network with new weights
-        if DYNAMIC:
+        if DYNAMIC:                                                                                     # Update the the target network with new weights
             memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
         else:
             memory.update_target(frame_count, model, model_target)
@@ -98,15 +95,16 @@ while True:  # Run until solved
     running_reward = np.mean(episode_reward_history)
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    if running_reward > min_reward:
+    if running_reward > min_reward + 1:
         checkpoint.save(log_dir + timestamp + "/saved_models/ckpt")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
-        min_reward = running_reward + 1
+        min_reward = running_reward
 
     # Feedback
     with summary_writer.as_default():
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
+        tf.summary.scalar('loss', loss, step=episode_count)
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 21:
