@@ -2,12 +2,14 @@
 
 **Project ID:** 0CxFIFGp
 
+
+
 #### Reinforcement Learning
-Abstract: *Reinforcement learning (RL) is the field of computer science concerned with how agents, using trial and error, learn to choose specific actions within an environment in order to maximize a reward signal.*
+Abstract: *Reinforcement learning is the field of computer science concerned with how agents, through trial and error, learn to operate within an environment in order to maximize a reward signal.*
 
 ### Packages
 
-`gym` `vizdoom` `tensorflow-2.x` `numpy` `pillow`
+`gym` `vizdoom` `tensorflow-2.x` `numpy` `imageio`
 
 ### Environments
 
@@ -20,3 +22,5 @@ Abstract: *Reinforcement learning (RL) is the field of computer science concerne
 
 ### Acknowledgments
 [Human Level Control Through Deep Reinforcement Learning](https://arxiv.org/pdf/1312.5602v1.pdf) (2015)<br />
+[A Doom-based AI Research Platform for Visual Reinforcement Learning](https://arxiv.org/pdf/1605.02097.pdf) (2016)<br />
+[Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model](https://arxiv.org/pdf/1911.08265.pdf) (2020)
