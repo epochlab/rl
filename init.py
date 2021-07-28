@@ -76,7 +76,7 @@ while True:  # Run until solved
         state = state_next                                                                              # Update state
         frame_count += 1
 
-        loss = memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                        # Learn every fourth frame and once batch size is over 32
+        memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                        # Learn every fourth frame and once batch size is over 32
 
         if DYNAMIC:                                                                                     # Update the the target network with new weights
             memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
@@ -104,7 +104,6 @@ while True:  # Run until solved
     with summary_writer.as_default():
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
-        tf.summary.scalar('loss', loss, step=episode_count)
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 21:
