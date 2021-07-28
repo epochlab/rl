@@ -5,6 +5,8 @@ import numpy as np
 
 import gym, vizdoom
 
+from agent import vision
+
 def atari_search():
     env = gym.make("PongNoFrameskip-v4")
     state = env.reset()
