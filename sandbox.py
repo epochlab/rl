@@ -3,13 +3,13 @@
 import random, time
 import numpy as np
 
-import gym
-import vizdoom
+import gym, vizdoom
 
 def atari_search():
     env = gym.make("PongNoFrameskip-v4")
     state = env.reset()
-    for i in range(10000):
+    terminal = False
+    while not terminal:
         env.render()
         action = np.random.choice(env.action_space.n)
         state_next, reward, terminal, info = env.step(action)
@@ -33,3 +33,5 @@ def doom_search():
         reward = env.make_action(random.choice(action_space))
         time.sleep(0.02)
     env.close()
+
+atari_search()
