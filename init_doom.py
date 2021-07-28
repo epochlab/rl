@@ -4,7 +4,7 @@ import numpy as np
 
 import tensorflow as tf
 
-from atari_wrapper import build_env
+from doom_wrapper import build_doom
 from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
@@ -14,13 +14,6 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-#print(gym.envs.registry.all())
-
-ENV_NAME = "PongNoFrameskip-v4"
-env, action_space = build_env(ENV_NAME)
-
-INPUT_SHAPE = (84, 84)
-WINDOW_LENGTH = 4
 MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
 
 DOUBLE = True                                   # Double DQN
@@ -30,6 +23,8 @@ PLAYBACK = False                                # Vizualize Training
 log_dir = "metrics/"
 
 # -----------------------------
+
+env, action_space, INPUT_SHAPE, WINDOW_LENGTH = build_doom(ENV_NAME)
 
 model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
