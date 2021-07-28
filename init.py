@@ -96,7 +96,6 @@ while True:  # Run until solved
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if running_reward > min_reward + 1 and episode_count > 10:
-        # checkpoint.save(log_dir + timestamp + "/saved_models/ckpt")
         memory.save(model, model_target, log_dir + timestamp + "/saved_models")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
