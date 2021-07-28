@@ -33,5 +33,3 @@ def doom_search():
         reward = env.make_action(random.choice(action_space))
         time.sleep(0.02)
     env.close()
-
-atari_search()
