@@ -28,8 +28,14 @@ def doom_search():
     env.new_episode()
     while not env.is_episode_finished():
         state = env.get_state()
-        img = state.screen_buffer
-        misc = state.game_variables
-        reward = env.make_action(random.choice(action_space))
+        n = state.number
+        vars = state.game_variables
+        screen_buf = state.screen_buffer
+        depth_buf = state.depth_buffer
+        labels_buf = state.labels_buffer
+        automap_buf = state.automap_buffer
+        labels = state.labels
+        action = random.choice(action_space)
+        reward = env.make_action(action)
         time.sleep(0.02)
     env.close()
