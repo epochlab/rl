@@ -2,20 +2,26 @@
 
 import vizdoom
 
-CONFIG_PATH = '/mnt/vanguard/git/ViZDoom-master/scenarios/basic.cfg'
-MAP = 'map01'
+class sandbox:
+    def __init__(self):
+        self.CONFIG_PATH = '/mnt/vanguard/git/ViZDoom-master/scenarios/basic.cfg'
+        self.MAP = 'map01'
 
-def build_doom():
-    INPUT_SHAPE = (64, 64)
-    WINDOW_LENGTH = 4
+    def build_env(self):
+        INPUT_SHAPE = (64, 64)
+        WINDOW_LENGTH = 4
 
-    env = vizdoom.DoomGame()
-    env.load_config(CONFIG_PATH)
-    env.init()
+        env = vizdoom.DoomGame()
+        env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
+        env.set_window_visible(False)
+        env.init()
+        env.new_episode()
+        return env, INPUT_SHAPE, WINDOW_LENGTH
 
-    shoot = [0, 0, 1]
-    left = [1, 0, 0]
-    right = [0, 1, 0]
-    action_space = [shoot, left, right]
+    def interact(self, env):
+        state = env.get_state()
+        info = state.game_variables  # [KILLCOUNT, AMMO, HEALTH]
+        prev_info = info
 
-    return env, action_space, INPUT_SHAPE, WINDOW_LENGTH
+        action_space = env.get_available_buttons_size()
+        return state, info, prev_info, action_space
