@@ -43,5 +43,6 @@ def doom_search():
         action = action.astype(int)
         env.set_action(action.tolist())
         reward = env.advance_action(fps)
+
         time.sleep(0.02)
     env.close()
