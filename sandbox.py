@@ -5,8 +5,6 @@ import numpy as np
 
 import gym, vizdoom
 
-from agent import vision
-
 def atari_search():
     env = gym.make("PongNoFrameskip-v4")
     state = env.reset()
@@ -22,22 +20,30 @@ def doom_search():
     env.load_config('/mnt/vanguard/git/ViZDoom-master/scenarios/basic.cfg')
     env.init()
 
-    shoot = [0, 0, 1]
-    left = [1, 0, 0]
-    right = [0, 1, 0]
-    action_space = [shoot, left, right]
+    action_space = env.get_available_buttons_size()
+    action_history = []
+    fps = 1
 
     env.new_episode()
     while not env.is_episode_finished():
         state = env.get_state()
+
         n = state.number
         vars = state.game_variables
+
         screen_buf = state.screen_buffer
         depth_buf = state.depth_buffer
         labels_buf = state.labels_buffer
         automap_buf = state.automap_buffer
         labels = state.labels
-        action = random.choice(action_space)
-        reward = env.make_action(action)
+
+        action = np.zeros([action_space])
+        select = random.randrange(action_space)
+        action[select] = 1
+        action = action.astype(int)
+        env.set_action(action.tolist())
+        env.advance_action(fps)
         time.sleep(0.02)
     env.close()
+
+doom_search()
