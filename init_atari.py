@@ -42,7 +42,7 @@ memory = memory(action_space)
 
 # -----------------------------
 
-timestamp, summary_writer, checkpoint = log_feedback(model, log_dir)
+timestamp, summary_writer = log_feedback(model, log_dir)
 print("Job ID:", timestamp)
 
 frame_count = 0
@@ -95,8 +95,8 @@ while True:  # Run until solved
     running_reward = np.mean(episode_reward_history)
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    if running_reward > min_reward + 1 and episode_count > 10:
-        memory.save(model, model_target, log_dir + timestamp + "/saved_models")
+    if running_reward > (min_reward + 1) and episode_count > 10:
+        memory.save(model, model_target, log_dir + timestamp + "/saved_model")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
@@ -107,7 +107,7 @@ while True:  # Run until solved
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 21:
-        checkpoint.save(checkpoint_path)
+        memory.save(model, model_target, log_dir + timestamp + "/saved_model")
         print("Solved at episode {}!".format(episode_count))
         break
 

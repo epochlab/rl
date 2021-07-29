@@ -18,8 +18,7 @@ def log_feedback(model, log_dir):
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     summary_writer = tf.summary.create_file_writer(log_dir + timestamp)
-    checkpoint = tf.train.Checkpoint(model)
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
     os.system("tensorboard --logdir=" + str(log_dir) + " --port=6006 &")
-    return timestamp, summary_writer, checkpoint
+    return timestamp, summary_writer
