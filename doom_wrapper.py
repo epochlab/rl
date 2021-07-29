@@ -24,4 +24,5 @@ class sandbox:
         prev_info = info
 
         action_space = env.get_available_buttons_size()
+
         return state, info, prev_info, action_space
