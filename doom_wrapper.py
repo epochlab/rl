@@ -18,11 +18,12 @@ class sandbox:
         WINDOW_LENGTH = 4
 
         env = vizdoom.DoomGame()
+        env.load_config('/mnt/vanguard/lab/rl/scenarios/basic.cfg')
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
-        env.set_window_visible(False)
+        env.set_window_visible(True)
         env.init()
-        env.new_episode()
-        return env, INPUT_SHAPE, WINDOW_LENGTH
+        action_space = env.get_available_buttons_size()
+        return env, action_space, INPUT_SHAPE, WINDOW_LENGTH
 
     def preprocess(state, size):
         frame = state.screen_buffer.astype(np.float32)

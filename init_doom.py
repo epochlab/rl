@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import random
 
 import tensorflow as tf
 
@@ -26,28 +27,28 @@ log_dir = "metrics/"
 
 # Build sandbox environment
 sandbox = sandbox()
-env, INPUT_SHAPE, WINDOW_LENGTH = sandbox.build_env()
-state, info, prev_info, action_space = sandbox.interact(env)
+env, action_space, INPUT_SHAPE, WINDOW_LENGTH = sandbox.build_env()
+
 
 # Compile neural networks
 model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
-# model.summary()
+model.summary()
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-# Build Agent
-agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
-vision = vision(INPUT_SHAPE, WINDOW_LENGTH)
-memory = memory(action_space)
+# # Build Agent
+# agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
+# vision = vision(INPUT_SHAPE, WINDOW_LENGTH)
+# memory = memory(action_space)
 
 # -----------------------------
 
-timestamp, summary_writer, checkpoint = log_feedback(model, log_dir)
-print("Job ID:", timestamp)
-
-frame_count = 0
-episode_count = 0
+# timestamp, summary_writer, checkpoint = log_feedback(model, log_dir)
+# print("Job ID:", timestamp)
+#
+# frame_count = 0
+# episode_count = 0
 
 # episode_reward_history = []
 # running_reward = -21
