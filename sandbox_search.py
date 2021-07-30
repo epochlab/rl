@@ -19,17 +19,18 @@ def doom_search():
     env = vizdoom.DoomGame()
     env.load_config('/mnt/vanguard/git/ViZDoom-master/scenarios/basic.cfg')
     env.init()
+    env.set_window_visible(True)
 
     action_space = env.get_available_buttons_size()
     action_history = []
-    fps = 1
+    FPS = 1
 
     env.new_episode()
     while not env.is_episode_finished():
         state = env.get_state()
-
         n = state.number
-        vars = state.game_variables
+        info = state.game_variables  # [KILLCOUNT, AMMO, HEALTH]
+        prev_info = info
 
         screen_buf = state.screen_buffer
         depth_buf = state.depth_buffer
@@ -41,8 +42,13 @@ def doom_search():
         select = random.randrange(action_space)
         action[select] = 1
         action = action.astype(int)
+
         env.set_action(action.tolist())
-        reward = env.advance_action(fps)
+        env.advance_action(FPS)
+
+        state = env.get_state()
+        terminated = env.is_episode_finished()
+        reward = env.get_last_reward()
 
         time.sleep(0.02)
     env.close()
