@@ -15,7 +15,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-MAX_STEPS_PER_EPISODE = 18000                   # 5mins at 60fps = 18000 steps
+MAX_STEPS_PER_EPISODE = 300                     # 5mins at 60fps = 18000 steps
 
 DOUBLE = True                                   # Double DQN
 DYNAMIC = True                                  # Dynamic update
@@ -37,9 +37,8 @@ model.summary()
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
-# # Build Agent
-# agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
-# vision = vision(INPUT_SHAPE, WINDOW_LENGTH)
+# Build Agent
+agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
 # memory = memory(action_space)
 
 # -----------------------------

@@ -70,11 +70,3 @@ class agent:
 
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
-
-class vision:
-    def __init__(self, input_shape, window_length):
-        self.INPUT_SHAPE = input_shape
-        self.WINDOW_LENGTH = window_length
-
-    def preprocess(img):
-        print(img.shape)
