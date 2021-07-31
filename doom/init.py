@@ -56,27 +56,30 @@ min_reward = 0
 
 # -----------------------------
 env.new_episode()
+env.new_episode()
+state = env.get_state()
+info = state.game_variables
+prev_info = info
 
 while True:  # Run until solved
-    state = np.array(env.game_state())
+    state = np.array(env.get_state())
 
     episode_reward = 0
     life = 0
 
     for timestep in range(1, MAX_STEPS_PER_EPISODE):
 
-#         action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
+        action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
 
-#         state_next, reward, terminal, info = agent.step(action)                                         # Apply the sampled action in our environment
-#         terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
-#         memory.add_memory(action, state, state_next, reward, terminal_life_lost)                        # Save actions and states in replay buffer
-#
-#         episode_reward += reward                                                                        # Update running reward
-#         state = state_next                                                                              # Update state
-#         frame_count += 1
-#
-#         memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                               # Learn every fourth frame and once batch size is over 32
-#
+        state_next, reward, terminal = sandbox.step(env, action)                                         # Apply the sampled action in our environment
+        memory.add_memory(action, state, state_next, reward, terminal)                        # Save actions and states in replay buffer
+
+        episode_reward += reward                                                                        # Update running reward
+        state = state_next                                                                              # Update state
+        frame_count += 1
+
+        # memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                               # Learn every fourth frame and once batch size is over 32
+
 #         if DYNAMIC:                                                                                     # Update the the target network with new weights
 #             memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
 #         else:
@@ -95,7 +98,7 @@ while True:  # Run until solved
 #
 #     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
 #     if running_reward > min_reward + 1 and episode_count > 10:
-#         memory.save(model, model_target, log_dir + timestamp + "/saved_models")
+#         memory.save(model, model_target, log_dir + timestamp + "/saved_model")
 #         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
 #         min_reward = running_reward
 #
@@ -106,7 +109,7 @@ while True:  # Run until solved
 #
 #     # Condition to consider the task solved (Pong = 21)
 #     if running_reward == 21:
-#         checkpoint.save(checkpoint_path)
+#         memory.save(model, model_target, log_dir + timestamp + "/saved_model")
 #         print("Solved at episode {}!".format(episode_count))
 #         break
 #
