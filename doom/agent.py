@@ -32,18 +32,6 @@ class agent:
         self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)
         return action_idx
 
-    def step(self, naction):
-        state_next, reward, terminal, info = self.ENV.step(naction)
-        return np.array(state_next), reward, terminal, info
-
-    def punish(self, info, health, feedback):
-        if info['ale.lives'] < health:
-            life_lost = True
-        else:
-            life_lost = feedback
-        health = info['ale.lives']
-        return life_lost, health
-
     def evaluate(self, model, log_dir, episode_id):
         state = np.array(self.ENV.reset())
         episode_reward = 0
