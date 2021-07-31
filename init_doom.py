@@ -6,7 +6,7 @@ import random
 import tensorflow as tf
 
 from doom_wrapper import sandbox
-from agent import agent, vision
+from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
 from utils import log_feedback
@@ -39,36 +39,33 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
 
 # Build Agent
 agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
-# memory = memory(action_space)
+memory = memory(action_space)
 
 # -----------------------------
 
-# timestamp, summary_writer, checkpoint = log_feedback(model, log_dir)
-# print("Job ID:", timestamp)
-#
-# frame_count = 0
-# episode_count = 0
+timestamp, summary_writer = log_feedback(model, log_dir)
+print("Job ID:", timestamp)
 
-# episode_reward_history = []
-# running_reward = -21
-# eval_reward = -21
-# min_reward = -21
-#
-# # -----------------------------
-#
-# while True:  # Run until solved
-#     state = np.array(env.reset())
-#
-#     episode_reward = 0
-#     life = 0
-#     terminal_life_lost = True
-#
-#     for timestep in range(1, MAX_STEPS_PER_EPISODE):
-#
-#         if PLAYBACK:
-#             env.render();                                                                               # View training in real-time
-#
-#         action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
+frame_count = 0
+episode_count = 0
+
+episode_reward_history = []
+running_reward = 0
+eval_reward = 0
+min_reward = 0
+
+# -----------------------------
+env.new_episode()
+
+while True:  # Run until solved
+    state = np.array(env.game_state())
+
+    episode_reward = 0
+    life = 0
+
+    for timestep in range(1, MAX_STEPS_PER_EPISODE):
+
+        # action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
 #         state_next, reward, terminal, info = agent.step(action)                                         # Apply the sampled action in our environment
 #         terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
 #         memory.add_memory(action, state, state_next, reward, terminal_life_lost)                        # Save actions and states in replay buffer
