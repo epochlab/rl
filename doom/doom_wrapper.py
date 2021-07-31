@@ -10,7 +10,7 @@ from collections import deque
 
 class sandbox:
     def __init__(self):
-        self.CONFIG_PATH = '/mnt/vanguard/lab/rl/scenarios/basic.cfg'
+        self.CONFIG_PATH = '/mnt/vanguard/lab/rl/doom/scenarios/basic.cfg'
         self.MAP = 'map01'
 
     def build_env(self):
@@ -18,7 +18,7 @@ class sandbox:
         WINDOW_LENGTH = 4
 
         env = vizdoom.DoomGame()
-        env.load_config('/mnt/vanguard/lab/rl/scenarios/basic.cfg')
+        env.load_config(self.CONFIG_PATH)
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
         env.set_window_visible(True)
         env.init()
