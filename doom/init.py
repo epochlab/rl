@@ -20,9 +20,9 @@ print("Eager mode:", tf.executing_eagerly())
 MAX_STEPS_PER_EPISODE = 300                     # 5mins at 60fps = 18000 steps
 
 DOUBLE = True                                   # Double DQN
-DYNAMIC = True                                  # Dynamic update
+DYNAMIC = False                                 # Dynamic update
 PLAYBACK = False                                # Vizualize Training
-FPS = 1
+FPS = 4
 
 log_dir = "metrics/"
 
@@ -35,9 +35,9 @@ env, action_space, INPUT_SHAPE, WINDOW_LENGTH = sandbox.build_env()
 # Compile neural networks
 model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
 model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
-model.summary()
+# model.summary()
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
 
 # Build Agent
 agent = agent(env, action_space, MAX_STEPS_PER_EPISODE)
@@ -49,35 +49,29 @@ timestamp, summary_writer = log_feedback(model, log_dir)
 print("Job ID:", timestamp)
 
 episode_count = 0
-
-episode_reward_history = []
-running_reward = 0
-eval_reward = 0
-min_reward = 0
-
-GAME = 0
 frame_count = 0
-max_life = 0
 life = 0
+max_life = 0
 
-life_buffer, ammo_buffer, kills_buffer = [], [], []
+life_buffer, ammo_buffer, kill_buffer = [], [], []
 
 # -----------------------------
+
 env.new_episode()
 state = env.get_state()
-frame = state.screen_buffer
 info = state.game_variables
 prev_info = info
 
+frame = state.screen_buffer
 stack = deque([np.zeros(INPUT_SHAPE, dtype=int) for i in range(4)], maxlen=4)
 stack, stack_state = sandbox.framestack(stack, frame, True)
 
 while not env.is_episode_finished():  # Run until solved
 
     reward = 0
-
     action = np.zeros([action_space])
-    action_idx = agent.exploration(frame_count, state, model)                                         # Use epsilon-greedy for exploration
+
+    action_idx = agent.exploration(frame_count, stack_state, model)                                         # Use epsilon-greedy for exploration
     action[action_idx] = 1
     action = action.astype(int)
 
@@ -92,13 +86,13 @@ while not env.is_episode_finished():  # Run until solved
         if (life>max_life):
             max_life = life
 
-        GAME +=1
+        episode_count += 1
+
+        print('Episode Finished', info)
 
         life_buffer.append(life)
-        kills_buffer.append(info[0])
+        kill_buffer.append(info[0])
         ammo_buffer.append(info[1])
-
-        print('Game Finished', info)
 
         env.new_episode()
         state = env.get_state()
@@ -112,27 +106,24 @@ while not env.is_episode_finished():  # Run until solved
 
     if terminated:
         life = 0
+        print(frame_count, reward)
     else:
         life += 1
 
-    prev_info = prev_info
+    prev_info = info
 
-    print('Kill:', info[0], 'Ammo:', info[1], 'Reward:', reward)
+    memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                              # Save actions and states in replay buffer
+    memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                                                 # Learn every fourth frame and once batch size is over 32
 
-        # state_next, reward, terminal = sandbox.step(env, action)                                          # Apply the sampled action in our environment
-    memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                  # Save actions and states in replay buffer
-
-    frame_count += 1
-    stack_state = next_stack_state
-
-    memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                               # Learn every fourth frame and once batch size is over 32
-
-    if DYNAMIC:                                                                                     # Update the the target network with new weights
+    if DYNAMIC:                                                                                                       # Update the the target network with new weights
         memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
     else:
         memory.update_target(frame_count, model, model_target)
 
-    memory.limit()                                                                                  # Limit memory cache to defined length
+    memory.limit()                                                                                                    # Limit memory cache to defined length
+
+    stack_state = next_stack_state
+    frame_count += 1
 
     # if terminal:
     #     break

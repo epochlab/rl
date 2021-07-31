@@ -42,7 +42,6 @@ class sandbox:
             stack.append(frame)
 
         stack_state = np.stack(stack, axis=2)
-        # stack_state = np.expand_dims(stack_state, axis=0)
         return stack, stack_state
 
     def step(self, env, action):

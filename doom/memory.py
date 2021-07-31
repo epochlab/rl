@@ -8,10 +8,10 @@ class memory:
         self.ACTION_SPACE = action_space
 
         self.BATCH_SIZE = 32
-        self.MAX_MEMORY_LENGTH = 1000000
+        self.MAX_MEMORY_LENGTH = 50000
         self.UPDATE_AFTER_ACTIONS = 4
         self.GAMMA = 0.99
-        self.UPDATE_TARGET_NETWORK = 10000
+        self.UPDATE_TARGET_NETWORK = 3000
         self.TAU = 0.08
 
         self.action_history = []
