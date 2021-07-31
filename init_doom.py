@@ -65,7 +65,8 @@ while True:  # Run until solved
 
     for timestep in range(1, MAX_STEPS_PER_EPISODE):
 
-        # action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
+#         action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
+
 #         state_next, reward, terminal, info = agent.step(action)                                         # Apply the sampled action in our environment
 #         terminal_life_lost, life = agent.punish(info, life, terminal)                                   # Punishment for points lost within before terminal state
 #         memory.add_memory(action, state, state_next, reward, terminal_life_lost)                        # Save actions and states in replay buffer
