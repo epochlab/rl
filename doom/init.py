@@ -11,6 +11,8 @@ from memory import memory
 from networks import dqn, dueling_dqn
 from utils import log_feedback
 
+from collections import deque
+
 print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
@@ -20,6 +22,7 @@ MAX_STEPS_PER_EPISODE = 300                     # 5mins at 60fps = 18000 steps
 DOUBLE = True                                   # Double DQN
 DYNAMIC = True                                  # Dynamic update
 PLAYBACK = False                                # Vizualize Training
+FPS = 1
 
 log_dir = "metrics/"
 
@@ -28,7 +31,6 @@ log_dir = "metrics/"
 # Build sandbox environment
 sandbox = sandbox()
 env, action_space, INPUT_SHAPE, WINDOW_LENGTH = sandbox.build_env()
-
 
 # Compile neural networks
 model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
@@ -46,7 +48,6 @@ memory = memory(action_space)
 timestamp, summary_writer = log_feedback(model, log_dir)
 print("Job ID:", timestamp)
 
-frame_count = 0
 episode_count = 0
 
 episode_reward_history = []
@@ -54,41 +55,87 @@ running_reward = 0
 eval_reward = 0
 min_reward = 0
 
+GAME = 0
+frame_count = 0
+max_life = 0
+life = 0
+
+life_buffer, ammo_buffer, kills_buffer = [], [], []
+
 # -----------------------------
 env.new_episode()
-env.new_episode()
 state = env.get_state()
+frame = state.screen_buffer
 info = state.game_variables
 prev_info = info
 
-while True:  # Run until solved
-    state = np.array(env.get_state())
+stack = deque([np.zeros(INPUT_SHAPE, dtype=int) for i in range(4)], maxlen=4)
+stack, stack_state = sandbox.framestack(stack, frame, True)
 
-    episode_reward = 0
-    life = 0
+while not env.is_episode_finished():  # Run until solved
 
-    for timestep in range(1, MAX_STEPS_PER_EPISODE):
+    reward = 0
 
-        action = agent.exploration(frame_count, state, model)                                           # Use epsilon-greedy for exploration
+    action = np.zeros([action_space])
+    action_idx = agent.exploration(frame_count, state, model)                                         # Use epsilon-greedy for exploration
+    action[action_idx] = 1
+    action = action.astype(int)
 
-        state_next, reward, terminal = sandbox.step(env, action)                                         # Apply the sampled action in our environment
-        memory.add_memory(action, state, state_next, reward, terminal)                        # Save actions and states in replay buffer
+    env.set_action(action.tolist())
+    env.advance_action(FPS)
 
-        episode_reward += reward                                                                        # Update running reward
-        state = state_next                                                                              # Update state
-        frame_count += 1
+    state = env.get_state()
+    terminated = env.is_episode_finished()
+    reward = env.get_last_reward()
 
-        # memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                               # Learn every fourth frame and once batch size is over 32
+    if terminated:
+        if (life>max_life):
+            max_life = life
 
-#         if DYNAMIC:                                                                                     # Update the the target network with new weights
-#             memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
-#         else:
-#             memory.update_target(frame_count, model, model_target)
-#
-#         memory.limit()                                                                                  # Limit memory cache to defined length
-#
-#         if terminal:
-#             break
+        GAME +=1
+
+        life_buffer.append(life)
+        kills_buffer.append(info[0])
+        ammo_buffer.append(info[1])
+
+        print('Game Finished', info)
+
+        env.new_episode()
+        state = env.get_state()
+        next_frame = state.screen_buffer
+        info = state.game_variables
+
+    next_frame = state.screen_buffer
+    stack, next_stack_state = sandbox.framestack(stack, next_frame, False)
+    info = state.game_variables
+    reward = sandbox.shape_reward(reward, info, prev_info)
+
+    if terminated:
+        life = 0
+    else:
+        life += 1
+
+    prev_info = prev_info
+
+    print('Kill:', info[0], 'Ammo:', info[1], 'Reward:', reward)
+
+        # state_next, reward, terminal = sandbox.step(env, action)                                          # Apply the sampled action in our environment
+    memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                  # Save actions and states in replay buffer
+
+    frame_count += 1
+    stack_state = next_stack_state
+
+    memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                               # Learn every fourth frame and once batch size is over 32
+
+    if DYNAMIC:                                                                                     # Update the the target network with new weights
+        memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
+    else:
+        memory.update_target(frame_count, model, model_target)
+
+    memory.limit()                                                                                  # Limit memory cache to defined length
+
+    # if terminal:
+    #     break
 #
 #     # Update running reward to check condition for solving
 #     episode_reward_history.append(episode_reward)

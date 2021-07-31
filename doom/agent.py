@@ -21,19 +21,16 @@ class agent:
 
     def exploration(self, frame_count, nstate, model):
         if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
-            action = np.zeros([self.ACTION_SPACE])
-            select = random.randrange(self.ACTION_SPACE)
-            action[select] = 1
-            action = action.astype(int)
+            action_idx = random.randrange(self.ACTION_SPACE)
         else:
             state_tensor = tf.convert_to_tensor(nstate)
             state_tensor = tf.expand_dims(state_tensor, 0)
             action_probs = model(state_tensor, training=False)
-            action = tf.argmax(action_probs[0]).numpy()
+            action_idx = tf.argmax(action_probs[0]).numpy()
 
         self.EPSILON -= self.EPSILON_ANNEALER / self.EPSILON_GREEDY_FRAMES
         self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)
-        return action
+        return action_idx
 
     def step(self, naction):
         state_next, reward, terminal, info = self.ENV.step(naction)
