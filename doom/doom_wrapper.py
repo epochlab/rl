@@ -28,7 +28,7 @@ class sandbox:
 
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
-        frame = skimage.transform.resize(frame, self.INPUT_SHAPE)
+        frame = skimage.transform.resize(frame, size)
         frame = skimage.color.rgb2gray(frame)
         frame = frame / 255.0
         return frame
