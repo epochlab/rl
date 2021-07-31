@@ -54,9 +54,9 @@ class sandbox:
 
     def shape_reward(self, reward, info, prev_info):
         if (info[0] > prev_info[0]): # Kill count
-            reward = reward + 1
+            reward += 1
 
         if (info[1] < prev_info[1]): # Ammo
-            reward = reward - 0.1
+            reward -= 0.1
 
         return reward

@@ -88,11 +88,11 @@ while not env.is_episode_finished():  # Run until solved
 
         episode_count += 1
 
-        print('Episode Finished', info)
-
         life_buffer.append(life)
         kill_buffer.append(info[0])
         ammo_buffer.append(info[1])
+
+        print('Episode Finished', frame_count, info)
 
         env.new_episode()
         state = env.get_state()
@@ -106,7 +106,6 @@ while not env.is_episode_finished():  # Run until solved
 
     if terminated:
         life = 0
-        print(frame_count, reward)
     else:
         life += 1
 
@@ -125,8 +124,6 @@ while not env.is_episode_finished():  # Run until solved
     stack_state = next_stack_state
     frame_count += 1
 
-    # if terminal:
-    #     break
 #
 #     # Update running reward to check condition for solving
 #     episode_reward_history.append(episode_reward)
@@ -140,17 +137,14 @@ while not env.is_episode_finished():  # Run until solved
 #         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
 #         min_reward = running_reward
 #
-#     # Feedback
-#     with summary_writer.as_default():
-#         tf.summary.scalar('running_reward', running_reward, step=episode_count)
-#         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
-#
+    # Feedback
+    with summary_writer.as_default():
+        tf.summary.scalar('reward', reward, step=episode_count)
+
 #     # Condition to consider the task solved (Pong = 21)
 #     if running_reward == 21:
 #         memory.save(model, model_target, log_dir + timestamp + "/saved_model")
 #         print("Solved at episode {}!".format(episode_count))
 #         break
 #
-#     episode_count += 1
-#
-# env.close()
+env.close()
