@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import random
 import numpy as np
 import tensorflow as tf
 
@@ -12,15 +13,18 @@ class agent:
         self.MAX_STEPS_PER_EPISODE = max_steps_per_episode
 
         self.EPSILON = 1.0
-        self.EPSILON_RANDOM_FRAMES = 50000
-        self.EPSILON_GREEDY_FRAMES = 1000000.0
-        self.EPSILON_MIN = 0.1
+        self.EPSILON_RANDOM_FRAMES = 5000
+        self.EPSILON_GREEDY_FRAMES = 50000.0
+        self.EPSILON_MIN = 0.0001
         self.EPSILON_MAX = 1.0
         self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
 
     def exploration(self, frame_count, nstate, model):
         if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
-            action = np.random.choice(self.ACTION_SPACE)
+            action = np.zeros([self.ACTION_SPACE])
+            select = random.randrange(self.ACTION_SPACE)
+            action[select] = 1
+            action = action.astype(int)
         else:
             state_tensor = tf.convert_to_tensor(nstate)
             state_tensor = tf.expand_dims(state_tensor, 0)
