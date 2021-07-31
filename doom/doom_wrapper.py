@@ -12,6 +12,7 @@ class sandbox:
     def __init__(self):
         self.CONFIG_PATH = '/mnt/vanguard/lab/rl/doom/scenarios/basic.cfg'
         self.MAP = 'map01'
+        self.FPS = 1
 
     def build_env(self):
         INPUT_SHAPE = (64, 64)
@@ -25,7 +26,7 @@ class sandbox:
         action_space = env.get_available_buttons_size()
         return env, action_space, INPUT_SHAPE, WINDOW_LENGTH
 
-    def preprocess(state, size):
+    def preprocess(self, state, size):
         frame = state.screen_buffer.astype(np.float32)
         frame = np.rollaxis(frame, 0, 3)
         frame = skimage.transform.resize(frame, INPUT_SHAPE)
@@ -33,7 +34,7 @@ class sandbox:
         frame = frame / 255.0
         return frame
 
-    def framestack(stack, state, new_episode):
+    def framestack(self, stack, state, new_episode):
         frame = preprocess(state, INPUT_SHAPE)
         if new_episode:
             for _ in range(4):
@@ -45,22 +46,22 @@ class sandbox:
         stack_state = np.expand_dims(stack_state, axis=0)
         return stack, stack_state
 
-    def random_action(action_space):
+    def random_action(self, action_space):
         action = np.zeros([action_space])
         select = random.randrange(action_space)
         action[select] = 1
         action = action.astype(int)
         return action
 
-    def step(action):
+    def step(self, env, action):
         env.set_action(action.tolist())
-        env.advance_action(FPS)
+        env.advance_action(self.FPS)
         state = env.get_state()
-        terminated = env.is_episode_finished()
         reward = env.get_last_reward()
-        return state, terminated, reward
+        terminated = env.is_episode_finished()
+        return state, reward, terminated
 
-    def shape_reward(reward, misc, prev_misc):
+    def shape_reward(self, reward, misc, prev_misc):
         if (info[0] > prev_info[0]): # Kill count
             reward = reward + 1
 
