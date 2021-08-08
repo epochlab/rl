@@ -10,9 +10,7 @@ from collections import deque
 
 class sandbox:
     def __init__(self):
-        self.CONFIG_PATH = '/mnt/vanguard/lab/rl/doom/scenarios/basic.cfg'
-        self.MAP = 'map01'
-        self.FPS = 1
+        self.CONFIG_PATH = '/mnt/vanguard/git/ViZDoom-master/scenarios/basic.cfg'
 
         self.INPUT_SHAPE = (64, 64)
         self.WINDOW_LENGTH = 4
@@ -30,7 +28,7 @@ class sandbox:
         frame = np.rollaxis(frame, 0, 3)
         frame = skimage.transform.resize(frame, size)
         frame = skimage.color.rgb2gray(frame)
-        frame = frame / 255.0
+        # frame = frame / 255.0
         return frame
 
     def framestack(self, stack, state, new_episode):
@@ -44,19 +42,11 @@ class sandbox:
         stack_state = np.stack(stack, axis=2)
         return stack, stack_state
 
-    def step(self, env, action):
-        env.set_action(action.tolist())
-        env.advance_action(self.FPS)
-        state = env.get_state()
-        reward = env.get_last_reward()
-        terminated = env.is_episode_finished()
-        return state, reward, terminated
-
     def shape_reward(self, reward, info, prev_info):
         if (info[0] > prev_info[0]): # Kill count
-            reward += 1
+            reward = reward + 1
 
-        if (info[1] < prev_info[1]): # Ammo
-            reward -= 0.1
+        # if (info[1] < prev_info[1]): # Ammo
+        #     reward = reward - 0.1
 
         return reward
