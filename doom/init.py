@@ -2,6 +2,7 @@
 
 import numpy as np
 import random
+from collections import deque
 
 import tensorflow as tf
 
@@ -11,8 +12,6 @@ from memory import memory
 from networks import dqn, dueling_dqn
 from utils import log_feedback
 
-from collections import deque
-
 print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
@@ -21,7 +20,7 @@ MAX_STEPS_PER_EPISODE = 300                     # 5mins at 60fps = 18000 steps
 FPS = 4
 
 DOUBLE = True                                   # Double DQN
-DYNAMIC = True                                 # Dynamic update
+DYNAMIC = False                                 # Dynamic update
 
 log_dir = "metrics/"
 
@@ -47,16 +46,13 @@ memory = memory(action_space)
 timestamp, summary_writer = log_feedback(model, log_dir)
 print("Job ID:", timestamp)
 
-
+episode_reward_history = []
 episode_count = 0
 frame_count = 0
 life = 0
 max_life = 0
 
 life_buffer, ammo_buffer, kill_buffer = [], [], []
-
-episode_reward_history = []
-episode_reward = 0
 
 # -----------------------------
 
@@ -71,9 +67,7 @@ stack, stack_state = sandbox.framestack(stack, frame, True)
 
 while not env.is_episode_finished():  # Run until solved
 
-    reward = 0
     action = np.zeros([action_space])
-
     action_idx = agent.exploration(frame_count, stack_state, model)                                         # Use epsilon-greedy for exploration
     action[action_idx] = 1
     action = action.astype(int)
@@ -95,8 +89,6 @@ while not env.is_episode_finished():  # Run until solved
         kill_buffer.append(info[0])
         ammo_buffer.append(info[1])
 
-        print(frame_count, 'Episode Finished:', episode_count, 'Feedback', info)
-
         env.new_episode()
         state = env.get_state()
         next_frame = state.screen_buffer
@@ -107,7 +99,7 @@ while not env.is_episode_finished():  # Run until solved
     info = state.game_variables
     reward = sandbox.shape_reward(reward, info, prev_info)
 
-    memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                              # Save actions and states in replay buffer
+    memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                  # Save actions and states in replay buffer
     memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                                                 # Learn every fourth frame and once batch size is over 32
 
     if DYNAMIC:                                                                                                       # Update the the target network with new weights
@@ -119,20 +111,14 @@ while not env.is_episode_finished():  # Run until solved
 
     prev_info = info
 
-    if terminated:
-        life = 0
-    else:
-        life += 1
-
     stack_state = next_stack_state
     frame_count += 1
-    episode_reward += reward
 
     # Update running reward to check condition for solving
-    episode_reward_history.append(episode_reward)
+    episode_reward_history.append(reward)
     if len(episode_reward_history) > 100:
         del episode_reward_history[:1]
-    running_reward = (np.mean(episode_reward_history) / 100)
+    running_reward = np.mean(episode_reward_history)
 
     # # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     # if running_reward > min_reward + 1 and episode_count > 10:
@@ -140,14 +126,16 @@ while not env.is_episode_finished():  # Run until solved
     #     eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
     #     min_reward = running_reward
 
+    if terminated:
+        print("| Eps:", episode_count, "x:", frame_count, \
+              "| Action:", action_idx, "| Reward:", reward)
+
     # Feedback
     with summary_writer.as_default():
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
 
-    # Condition to consider the task solved (Pong = 21)
-    if running_reward == 100:
-        memory.save(model, model_target, log_dir + timestamp + "/saved_model")
-        print("Solved at episode {}!".format(episode_count))
-        break
-
-env.close()
+    # # Condition to consider the task solved (Pong = 21)
+    # if running_reward == 100:
+    #     memory.save(model, model_target, log_dir + timestamp + "/saved_model")
+    #     print("Solved at episode {}!".format(episode_count))
+    #     break
