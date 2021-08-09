@@ -9,10 +9,9 @@ from doom_wrapper import sandbox
 from utils import capture, render_gif
 
 class agent:
-    def __init__(self, env, action_space, max_steps_per_episode):
+    def __init__(self, env, action_space):
         self.ENV = env
         self.ACTION_SPACE = action_space
-        self.MAX_STEPS_PER_EPISODE = max_steps_per_episode
 
         self.EPSILON = 1.0
         self.EPSILON_RANDOM_FRAMES = 5000

@@ -2,7 +2,6 @@
 
 import vizdoom
 import numpy as np
-import time, random
 
 import skimage
 from skimage import transform, color
@@ -10,15 +9,13 @@ from collections import deque
 
 class sandbox:
     def __init__(self):
-        self.CONFIG_PATH = '/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg'
-
         self.INPUT_SHAPE = (64, 64)
         self.WINDOW_LENGTH = 4
         self.FPS = 4
 
-    def build_env(self):
+    def build_env(self, config_path):
         env = vizdoom.DoomGame()
-        env.load_config(self.CONFIG_PATH)
+        env.load_config(config_path)
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
         env.set_window_visible(True)
         env.init()
@@ -42,6 +39,17 @@ class sandbox:
 
         stack_state = np.stack(stack, axis=2)
         return stack, stack_state
+
+    def reset(self, env):
+        env.new_episode()
+        state = env.get_state()
+        info = state.game_variables
+        prev_info = info
+
+        frame = state.screen_buffer
+        stack = deque([np.zeros(self.INPUT_SHAPE, dtype=int) for i in range(self.WINDOW_LENGTH)], maxlen=4)
+        stack, stack_state = self.framestack(stack, frame, True)
+        return info, prev_info, stack, stack_state
 
     def step(self, env, stack, prev_info, action):
         env.set_action(action.tolist())
