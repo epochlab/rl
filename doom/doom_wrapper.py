@@ -14,6 +14,7 @@ class sandbox:
 
         self.INPUT_SHAPE = (64, 64)
         self.WINDOW_LENGTH = 4
+        self.FPS = 4
 
     def build_env(self):
         env = vizdoom.DoomGame()
@@ -41,6 +42,26 @@ class sandbox:
 
         stack_state = np.stack(stack, axis=2)
         return stack, stack_state
+
+    def step(self, env, stack, prev_info, action):
+        env.set_action(action.tolist())
+        env.advance_action(self.FPS)
+
+        state = env.get_state()
+        terminated = env.is_episode_finished()
+        reward = env.get_last_reward()
+
+        if terminated:
+            env.new_episode()
+            state = env.get_state()
+            next_frame = state.screen_buffer
+            info = state.game_variables
+
+        next_frame = state.screen_buffer
+        stack, next_stack_state = self.framestack(stack, next_frame, False)
+        info = state.game_variables
+        reward = self.shape_reward(reward, info, prev_info)
+        return next_stack_state, reward, terminated, info
 
     def shape_reward(self, reward, info, prev_info):
         if (info[0] > prev_info[0]): # Kill count

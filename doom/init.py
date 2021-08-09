@@ -73,37 +73,22 @@ while not env.is_episode_finished():  # Run until solved
     action[action_idx] = 1
     action = action.astype(int)
 
-    env.set_action(action.tolist())
-    env.advance_action(FPS)
-
-    state = env.get_state()
-    terminated = env.is_episode_finished()
-    reward = env.get_last_reward()
+    next_stack_state, reward, terminated, info = sandbox.step(env, stack, prev_info, action)
 
     if terminated:
         if life > max_life:
             max_life = life
 
-        episode_count += 1
-        episode_reward = 0
-        life = 0
-
         life_buffer.append(life)
         kill_buffer.append(info[0])
         ammo_buffer.append(info[1])
 
-        env.new_episode()
-        state = env.get_state()
-        next_frame = state.screen_buffer
-        info = state.game_variables
-
-    next_frame = state.screen_buffer
-    stack, next_stack_state = sandbox.framestack(stack, next_frame, False)
-    info = state.game_variables
-    reward = sandbox.shape_reward(reward, info, prev_info)
-    life += 1
-
-    episode_reward += reward
+        life = 0
+        episode_reward = 0
+        episode_count += 1
+    else:
+        life += 1
+        episode_reward += reward
 
     memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                  # Save actions and states in replay buffer
     memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                                                 # Learn every fourth frame and once batch size is over 32
@@ -116,8 +101,8 @@ while not env.is_episode_finished():  # Run until solved
     memory.limit()                                                                                                    # Limit memory cache to defined length
 
     prev_info = info
-
     stack_state = next_stack_state
+
     frame_count += 1
 
     # Update running reward to check condition for solving
@@ -131,7 +116,7 @@ while not env.is_episode_finished():  # Run until solved
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
 
     # # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    # if running_reward > min_reward + 1 and episode_count > 10:
+    # if running_reward > min_reward + 1 and episode_count > 100:
     #     memory.save(model, model_target, log_dir + timestamp + "/saved_model")
     #     eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
     #     min_reward = running_reward
