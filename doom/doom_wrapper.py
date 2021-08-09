@@ -10,7 +10,7 @@ from collections import deque
 
 class sandbox:
     def __init__(self):
-        self.CONFIG_PATH = '/mnt/vanguard/git/ViZDoom-master/scenarios/basic.cfg'
+        self.CONFIG_PATH = '/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg'
 
         self.INPUT_SHAPE = (64, 64)
         self.WINDOW_LENGTH = 4
@@ -46,7 +46,10 @@ class sandbox:
         if (info[0] > prev_info[0]): # Kill count
             reward = reward + 1
 
-        # if (info[1] < prev_info[1]): # Ammo
-        #     reward = reward - 0.1
+        if (info[1] < prev_info[1]): # Ammo
+            reward = reward - 0.1
+
+        if (info[2] < prev_info[2]): # Health
+            reward = reward - 0.1
 
         return reward

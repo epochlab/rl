@@ -48,6 +48,7 @@ print("Job ID:", timestamp)
 
 episode_reward_history = []
 episode_count = 0
+episode_reward = 0
 frame_count = 0
 life = 0
 max_life = 0
@@ -84,6 +85,8 @@ while not env.is_episode_finished():  # Run until solved
             max_life = life
 
         episode_count += 1
+        episode_reward = 0
+        life = 0
 
         life_buffer.append(life)
         kill_buffer.append(info[0])
@@ -98,6 +101,9 @@ while not env.is_episode_finished():  # Run until solved
     stack, next_stack_state = sandbox.framestack(stack, next_frame, False)
     info = state.game_variables
     reward = sandbox.shape_reward(reward, info, prev_info)
+    life += 1
+
+    episode_reward += reward
 
     memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                  # Save actions and states in replay buffer
     memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                                                 # Learn every fourth frame and once batch size is over 32
@@ -115,24 +121,20 @@ while not env.is_episode_finished():  # Run until solved
     frame_count += 1
 
     # Update running reward to check condition for solving
-    episode_reward_history.append(reward)
+    episode_reward_history.append(episode_reward)
     if len(episode_reward_history) > 100:
         del episode_reward_history[:1]
     running_reward = np.mean(episode_reward_history)
+
+    # Feedback
+    with summary_writer.as_default():
+        tf.summary.scalar('running_reward', running_reward, step=episode_count)
 
     # # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     # if running_reward > min_reward + 1 and episode_count > 10:
     #     memory.save(model, model_target, log_dir + timestamp + "/saved_model")
     #     eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
     #     min_reward = running_reward
-
-    if terminated:
-        print("| Eps:", episode_count, "x:", frame_count, \
-              "| Action:", action_idx, "| Reward:", reward)
-
-    # Feedback
-    with summary_writer.as_default():
-        tf.summary.scalar('running_reward', running_reward, step=episode_count)
 
     # # Condition to consider the task solved (Pong = 21)
     # if running_reward == 100:

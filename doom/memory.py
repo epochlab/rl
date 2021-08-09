@@ -9,7 +9,7 @@ class memory:
 
         self.BATCH_SIZE = 32
         self.MAX_MEMORY_LENGTH = 50000
-        self.UPDATE_AFTER_ACTIONS = 4
+        self.UPDATE_AFTER_ACTIONS = 100
         self.GAMMA = 0.99
         self.UPDATE_TARGET_NETWORK = 3000
         self.TAU = 0.08

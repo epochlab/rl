@@ -14,7 +14,7 @@ class agent:
 
         self.EPSILON = 1.0
         self.EPSILON_RANDOM_FRAMES = 5000
-        self.EPSILON_GREEDY_FRAMES = 50000.0
+        self.EPSILON_GREEDY_FRAMES = 50000
         self.EPSILON_MIN = 0.0001
         self.EPSILON_MAX = 1.0
         self.EPSILON_ANNEALER = (self.EPSILON_MAX - self.EPSILON_MIN)
