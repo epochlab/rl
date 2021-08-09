@@ -2,12 +2,18 @@
 
 import os, datetime, imageio
 
+from PIL import Image
+import numpy as np
+
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
 def capture(env, timestep, sequence):
     if timestep < 600:
-        frame = env.render(mode='rgb_array')
+        state = env.get_state()
+        frame = state.screen_buffer
+        frame = np.rollaxis(frame, 0, 3)
+        frame = Image.fromarray(frame, 'RGB')
         sequence.append(frame)
     return sequence
 

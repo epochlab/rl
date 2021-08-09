@@ -3,7 +3,9 @@
 import random
 import numpy as np
 import tensorflow as tf
+from collections import deque
 
+from doom_wrapper import sandbox
 from utils import capture, render_gif
 
 class agent:
@@ -33,28 +35,44 @@ class agent:
         return action_idx
 
     def evaluate(self, model, log_dir, episode_id):
-        state = np.array(self.ENV.reset())
+        self.ENV.new_episode()
+        state = self.ENV.get_state()
+        info = state.game_variables
+        prev_info = info
+
+        frame = state.screen_buffer
+        stack = deque([np.zeros((64, 64), dtype=int) for i in range(4)], maxlen=4)
+        stack, stack_state = sandbox().framestack(stack, frame, True)
+
         episode_reward = 0
+        frame_count = 0
         frames = []
 
-        for timestep in range(1, self.MAX_STEPS_PER_EPISODE):
+        while not self.ENV.is_episode_finished():
 
             # Capture gameplay experience
-            frames = capture(self.ENV, timestep, frames)
+            frames = capture(self.ENV, frame_count, frames)
 
             # Predict action Q-values from environment state and take best action
-            state_tensor = tf.convert_to_tensor(state)
+            state_tensor = tf.convert_to_tensor(stack_state)
             state_tensor = tf.expand_dims(state_tensor, 0)
             action_probs = model(state_tensor, training=False)
-            action = tf.argmax(action_probs[0]).numpy()
+            action_idx = tf.argmax(action_probs[0]).numpy()
+
+            action = np.zeros([self.ACTION_SPACE])
+            action[action_idx] = 1
+            action = action.astype(int)
 
             # Apply the sampled action in our environment
-            state_next, reward, terminal, _ = self.step(action)
-            state = np.array(state_next)
+            next_stack_state, reward, terminated, info = sandbox().step(self.ENV, stack, prev_info, action)
 
             episode_reward += reward
 
-            if terminal:
+            prev_info = info
+            stack_state = next_stack_state
+            frame_count += 1
+
+            if terminated:
                 break
 
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
