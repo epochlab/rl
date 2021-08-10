@@ -26,7 +26,6 @@ class sandbox:
         frame = np.rollaxis(frame, 0, 3)
         frame = skimage.transform.resize(frame, size)
         frame = skimage.color.rgb2gray(frame)
-        # frame = frame / 255.0
         return frame
 
     def framestack(self, stack, state, new_episode):
@@ -51,15 +50,19 @@ class sandbox:
         stack, stack_state = self.framestack(stack, frame, True)
         return info, prev_info, stack, stack_state
 
-    def step(self, env, stack, prev_info, action):
+    def step(self, env, stack, prev_info, action_idx, action_space):
+        action = np.zeros([action_space])
+        action[action_idx] = 1
+        action = action.astype(int)
+
         env.set_action(action.tolist())
         env.advance_action(self.FPS)
 
         state = env.get_state()
-        terminated = env.is_episode_finished()
+        terminal = env.is_episode_finished()
         reward = env.get_last_reward()
 
-        if terminated:
+        if terminal:
             env.new_episode()
             state = env.get_state()
             next_frame = state.screen_buffer
@@ -69,7 +72,7 @@ class sandbox:
         stack, next_stack_state = self.framestack(stack, next_frame, False)
         info = state.game_variables
         reward = self.shape_reward(reward, info, prev_info)
-        return next_stack_state, reward, terminated, info
+        return next_stack_state, reward, terminal, info
 
     def shape_reward(self, reward, info, prev_info):
         if (info[0] > prev_info[0]): # Kill count
@@ -82,3 +85,9 @@ class sandbox:
             reward = reward - 0.1
 
         return reward
+
+    def render(self, env):
+        state = env.get_state()
+        frame = state.screen_buffer
+        frame = np.rollaxis(frame, 0, 3)
+        return frame

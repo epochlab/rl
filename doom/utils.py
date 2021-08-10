@@ -2,18 +2,14 @@
 
 import os, datetime, imageio
 
-from PIL import Image
-import numpy as np
-
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
+from doom_wrapper import sandbox
+
 def capture(env, timestep, sequence):
     if timestep < 600:
-        state = env.get_state()
-        frame = state.screen_buffer
-        frame = np.rollaxis(frame, 0, 3)
-        frame = Image.fromarray(frame, 'RGB')
+        frame = sandbox().render(env)
         sequence.append(frame)
     return sequence
 

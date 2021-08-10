@@ -35,7 +35,7 @@ class memory:
         state_next_sample = np.array([self.state_next_history[i] for i in indices])
         reward_sample = [self.reward_history[i] for i in indices]
         terminal_sample = tf.convert_to_tensor([float(memory[i]) for i in indices])
-        return state_sample, state_next_sample, reward_sample, action_sample, terminal_sample
+        return action_sample, state_sample, state_next_sample, reward_sample, terminal_sample
 
     def limit(self):
         if len(self.terminal_history) > self.MAX_MEMORY_LENGTH:
@@ -48,7 +48,7 @@ class memory:
     def learn(self, frame_count, model, model_target, optimizer, double):
         if frame_count % self.UPDATE_AFTER_ACTIONS == 0 and len(self.terminal_history) > self.BATCH_SIZE:
             # Sample from replay buffer
-            state_sample, state_next_sample, reward_sample, action_sample, terminal_sample = self.sample(self.terminal_history)
+            action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = self.sample(self.terminal_history)
 
             # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
             q = model.predict(state_next_sample)

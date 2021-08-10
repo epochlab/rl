@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import numpy as np
-
 import tensorflow as tf
 
 from doom_wrapper import sandbox
@@ -25,11 +24,11 @@ log_dir = "metrics/"
 
 # Build sandbox environment
 sandbox = sandbox()
-env, action_space, INPUT_SHAPE, WINDOW_LENGTH = sandbox.build_env(ENV_NAME)
+env, action_space, input_shape, window_length = sandbox.build_env(ENV_NAME)
 
 # Compile neural networks
-model = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
-model_target = dueling_dqn(INPUT_SHAPE, WINDOW_LENGTH, action_space)
+model = dueling_dqn(input_shape, window_length, action_space)
+model_target = dueling_dqn(input_shape, window_length, action_space)
 # model.summary()
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
@@ -53,23 +52,19 @@ min_reward = 0
 
 # -----------------------------
 
-info, prev_info, stack, stack_state = sandbox.reset(env)
+info, prev_info, stack, state = sandbox.reset(env)
 
 while not env.is_episode_finished():  # Run until solved
 
-    action = np.zeros([action_space])
-    action_idx = agent.exploration(frame_count, stack_state, model)                                                   # Use epsilon-greedy for exploration
-    action[action_idx] = 1
-    action = action.astype(int)
-
-    next_stack_state, reward, terminated, info = sandbox.step(env, stack, prev_info, action)
-    memory.add_memory(action_idx, stack_state, next_stack_state, reward, terminated)                                  # Save actions and states in replay buffer
+    action = agent.exploration(frame_count, state, model)                                                   # Use epsilon-greedy for exploration
+    state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
+    memory.add_memory(action, state, state_next, reward, terminal)                                          # Save actions and states in replay buffer
 
     prev_info = info
-    stack_state = next_stack_state
+    state = state_next
     frame_count += 1
 
-    if terminated:
+    if terminal:
         episode_reward = 0
         episode_count += 1
     else:
@@ -91,7 +86,7 @@ while not env.is_episode_finished():  # Run until solved
     running_reward = np.mean(episode_reward_history)
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    if terminated and running_reward > (min_reward + 1):
+    if terminal and running_reward > (min_reward + 1):
         memory.save(model, model_target, log_dir + timestamp + "/saved_model")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
