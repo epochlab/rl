@@ -11,6 +11,10 @@ from utils import log_feedback
 
 print("Eager mode:", tf.executing_eagerly())
 
+physical_devices = tf.config.experimental.list_physical_devices("GPU")
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+print("GPU is", "available" if physical_devices else "NOT AVAILABLE")
+
 # -----------------------------
 
 ENV_NAME = '/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg'
