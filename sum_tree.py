@@ -3,7 +3,6 @@
 import numpy as np
 
 class SumTree:
-
     def __init__(self, capacity):
         self.FULL = False
         self.WRITE_INDEX = 0
