@@ -20,7 +20,7 @@ print("GPU is", "available" if physical_devices else "NOT AVAILABLE")
 ENV_NAME = '/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg'
 
 DOUBLE = True                                   # Double DQN
-DYNAMIC = False                                 # Dynamic update
+FIXED_Q = False                          # Dynamic update
 
 log_dir = "metrics/"
 
@@ -76,10 +76,10 @@ while not env.is_episode_finished():  # Run until solved
 
     memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                                                 # Learn every fourth frame and once batch size is over 32
 
-    if DYNAMIC:                                                                                                       # Update the the target network with new weights
-        memory.dynamic_target(model_target.trainable_variables, model.trainable_variables)
+    if FIXED_Q:                                                                                                       # Update the the target network with new weights
+        memory.fixed_q(model_target.trainable_variables, model.trainable_variables)
     else:
-        memory.update_target(frame_count, model, model_target)
+        memory.static_target(frame_count, model, model_target)
 
     memory.limit()                                                                                                    # Limit memory cache to defined length
 

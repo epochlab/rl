@@ -9,9 +9,10 @@ from collections import deque
 
 class sandbox:
     def __init__(self):
-        self.INPUT_SHAPE = (64, 64)
+        self.INPUT_SHAPE = (84, 84)
         self.WINDOW_LENGTH = 4
         self.FPS = 4
+        self.GRADE = True
 
     def build_env(self, config_path):
         env = vizdoom.DoomGame()
@@ -24,8 +25,14 @@ class sandbox:
 
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
-        frame = skimage.transform.resize(frame, size)
+        frame = frame[10:-10,20:-20]                                            # [Up: Down, Left: Right]
         frame = skimage.color.rgb2gray(frame)
+        frame = skimage.transform.resize(frame, size)
+
+        if self.GRADE:
+            frame -= np.min(frame)
+            frame *= (1/np.max(frame))
+
         return frame
 
     def framestack(self, stack, state, new_episode):

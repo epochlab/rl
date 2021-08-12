@@ -75,11 +75,11 @@ class memory:
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
             return loss
 
-    def update_target(self, frame_count, model, model_target):
+    def static_target(self, frame_count, model, model_target):
         if frame_count % self.UPDATE_TARGET_NETWORK == 0:
             model_target.set_weights(model.get_weights())
 
-    def dynamic_target(self, target_weights, weights):
+    def fixed_q(self, target_weights, weights):
         for (a, b) in zip(target_weights, weights):
             a.assign(b * self.TAU + a * (1 - self.TAU))
 
