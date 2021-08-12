@@ -36,6 +36,9 @@ class SumTree:
         else:
             return self.WRITE_INDEX
 
+    def total_sum(self):
+        return self.TREE[0]
+
     def insert(self, data, priority):
         self.DATA[self.WRITE_INDEX] = data
 
