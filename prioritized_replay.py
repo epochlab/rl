@@ -3,7 +3,7 @@
 import numpy as np
 from sum_tree import SumTree
 
-class PrioritizedReplayMemory:
+class PrioritizedReplayBuffer:
     def __init__(self, capacity, alpha=0.6, eps=1e-2):
         self.TREE = SumTree(capacity)
         self.ALPHA = alpha
