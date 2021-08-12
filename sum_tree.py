@@ -12,7 +12,6 @@ class SumTree:
 
     def propagate(self, idx, change):
         parent = (idx - 1) // 2
-
         self.TREE[parent] += change
 
         if parent != 0:
@@ -22,7 +21,7 @@ class SumTree:
         left = 2 * idx + 1
         right = left + 1
 
-        if left >= len(self.TREE):
+        if left >= len(self.TREE):                                              # current node is leaf node
             return idx
 
         if s <= self.TREE[left]:
@@ -59,4 +58,4 @@ class SumTree:
     def get(self, s):
         idx = self.retrieve(0, s)
         data_idx = idx - self.CAPACITY + 1
-        return (idx, self.TREE[idx], self.DATA[data_idx])
+        return (idx, self.TREE[idx], self.DATA[data_idx])                       # returns tuple: (tree_idx, priority, data)
