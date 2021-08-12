@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
-import os, datetime, imageio
+import yaml, os, datetime, imageio
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
 from doom_wrapper import sandbox
+
+def load_config():
+    with open('config.yaml') as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
 
 def capture(env, timestep, sequence):
     if timestep < 600:
