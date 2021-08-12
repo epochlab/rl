@@ -1,52 +1,25 @@
 ---
-atari:
--     env_name: "PongNoFrameskip-v4"
-      input_shape: (84, 84)
-      window_length: 4
-      fps: 4
-      grade: False
+  doom:
+    env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
+    input_shape: (84, 84)
+    window_length: 4
+    fps: 4
+    grade: True
 
-      max_steps_per_episode: 18000
+    double: True
+    fixed_q: False
+    learning_rate: 0.0001
 
-      double: True
-      fixed_q: True
-      learning_rate: 0.00025
+    epsilon: 1.0
+    epsilon_random_frames: 5000
+    epsilon_greedy_frames: 50000
+    epsilon_min: 0.0001
+    epsilon_max: 1.0
+    epsilon_annealer: (epsilon_max - epsilon_min)
 
-      epsilon: 1.0
-      epsilon_random_frames: 50000
-      epsilon_greedy_frames: 1000000.0
-      epsilon_min: 0.1
-      epsilon_max: 1.0
-      epsilon_annealer: (epsilon_max - epsilon_min)
-
-      max_memory_length: 1000000
-      batch_size: 32
-      gamma: 0.99
-      update_after_actions: 4
-      update_target_network: 10000
-      tau: 0.08
-
-doom:
--     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
-      input_shape: (84, 84)
-      window_length: 4
-      fps: 4
-      grade: True
-
-      double: True
-      fixed_q: False
-      learning_rate: 0.0001
-
-      epsilon: 1.0
-      epsilon_random_frames: 5000
-      epsilon_greedy_frames: 50000
-      epsilon_min: 0.0001
-      epsilon_max: 1.0
-      epsilon_annealer: (epsilon_max - epsilon_min)
-
-      max_memory_length: 50000
-      batch_size: 32
-      gamma: 0.99
-      update_after_actions: 100
-      update_target_network: 3000
-      tau: 0.08
+    max_memory_length: 50000
+    batch_size: 32
+    gamma: 0.99
+    update_after_actions: 100
+    update_target_network: 3000
+    tau: 0.08
