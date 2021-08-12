@@ -8,7 +8,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from doom_wrapper import sandbox
 
 def load_config():
-    with open('config.yml') as f:
+    with open('config.yaml') as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
 def capture(env, timestep, sequence):
