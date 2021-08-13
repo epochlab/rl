@@ -69,6 +69,13 @@ class agent:
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
             return loss
 
+    def static_target(self, frame_count, model, model_target):
+        if frame_count % self.UPDATE_TARGET_NETWORK == 0:
+            model_target.set_weights(model.get_weights())
+
+    def fixed_q(self, target_weights, weights):
+        for (a, b) in zip(target_weights, weights):
+            a.assign(b * self.TAU + a * (1 - self.TAU))
 
     def evaluate(self, model, log_dir, episode_id):
         info, prev_info, stack, state = sandbox(self.CONFIG).reset(self.ENV)

@@ -71,9 +71,9 @@ while not env.is_episode_finished():  # Run until solved
     agent.learn(frame_count, memory, model, model_target, optimizer, config['double'])                                                 # Learn every fourth frame and once batch size is over 32
 
     if config['fixed_q']:                                                                                                       # Update the the target network with new weights
-        memory.fixed_q(model_target.trainable_variables, model.trainable_variables)
+        agent.fixed_q(model_target.trainable_variables, model.trainable_variables)
     else:
-        memory.static_target(frame_count, model, model_target)
+        agent.static_target(frame_count, model, model_target)
 
     memory.limit()                                                                                                    # Limit memory cache to defined length
 
