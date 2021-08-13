@@ -68,7 +68,7 @@ while not env.is_episode_finished():  # Run until solved
     else:
         episode_reward += reward
 
-    memory.learn(frame_count, model, model_target, optimizer, config['double'])                                                 # Learn every fourth frame and once batch size is over 32
+    agent.learn(frame_count, memory, model, model_target, optimizer, config['double'])                                                 # Learn every fourth frame and once batch size is over 32
 
     if config['fixed_q']:                                                                                                       # Update the the target network with new weights
         memory.fixed_q(model_target.trainable_variables, model.trainable_variables)
