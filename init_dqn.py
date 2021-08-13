@@ -3,9 +3,9 @@
 import numpy as np
 import tensorflow as tf
 
-from doom_wrapper import sandbox
-from agent import agent
-from memory import memory
+from doom_wrapper import Sandbox
+from agent import Agent
+from memory import ExperienceReplayMemory
 from networks import dqn, dueling_dqn
 from utils import load_config, log_feedback, save, load
 
@@ -23,17 +23,17 @@ log_dir = "metrics/"
 
 # -----------------------------
 
-sandbox = sandbox(config)
-env, action_space, input_shape, window_length = sandbox.build_env(config['env_name'])
+sandbox = Sandbox(config)
+env, action_space = sandbox.build_env(config['env_name'])
 
-model = dueling_dqn(input_shape, window_length, action_space)
-model_target = dueling_dqn(input_shape, window_length, action_space)
+model = dueling_dqn(config['input_shape'], config['window_length'], action_space)
+model_target = dueling_dqn(config['input_shape'], config['window_length'], action_space)
 model.summary()
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
-agent = agent(config, env, action_space)
-memory = memory(config, action_space)
+agent = Agent(config, sandbox, env, action_space)
+memory = ExperienceReplayMemory(config)
 
 # -----------------------------
 

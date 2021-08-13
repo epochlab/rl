@@ -4,12 +4,11 @@ import random
 import numpy as np
 import tensorflow as tf
 
-from doom_wrapper import sandbox
 from utils import capture, render_gif
 
-class agent:
-    def __init__(self, config, env, action_space):
-        self.CONFIG = config
+class Agent:
+    def __init__(self, config, sandbox, env, action_space):
+        self.SANDBOX = sandbox
         self.ENV = env
         self.ACTION_SPACE = action_space
 
@@ -26,11 +25,11 @@ class agent:
         self.UPDATE_TARGET_NETWORK = config['update_target_network']
         self.TAU = config['tau']
 
-    def exploration(self, frame_count, nstate, model):
+    def exploration(self, frame_count, state, model):
         if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
             action_idx = random.randrange(self.ACTION_SPACE)
         else:
-            state_tensor = tf.convert_to_tensor(nstate)
+            state_tensor = tf.convert_to_tensor(state)
             state_tensor = tf.expand_dims(state_tensor, 0)
             action_probs = model(state_tensor, training=False)
             action_idx = tf.argmax(action_probs[0]).numpy()
@@ -78,7 +77,7 @@ class agent:
             a.assign(b * self.TAU + a * (1 - self.TAU))
 
     def evaluate(self, model, log_dir, episode_id):
-        info, prev_info, stack, state = sandbox(self.CONFIG).reset(self.ENV)
+        info, prev_info, stack, state = self.SANDBOX.reset(self.ENV)
 
         episode_reward = 0
         frame_count = 0
@@ -87,7 +86,7 @@ class agent:
         while not self.ENV.is_episode_finished():
 
             # Capture gameplay experience
-            frames = capture(self.ENV, self.CONFIG, frame_count, frames)
+            frames = capture(self.ENV, self.SANDBOX, frames)
 
             # Predict action Q-values from environment state and take best action
             state_tensor = tf.convert_to_tensor(state)
@@ -96,7 +95,7 @@ class agent:
             action = tf.argmax(action_probs[0]).numpy()
 
             # Apply the sampled action in our environment
-            state_next, reward, terminal, info = sandbox(self.CONFIG).step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
 
             episode_reward += reward
 

@@ -7,7 +7,7 @@ import skimage
 from skimage import transform, color
 from collections import deque
 
-class sandbox:
+class Sandbox:
     def __init__(self, config):
         self.INPUT_SHAPE = config['input_shape']
         self.WINDOW_LENGTH = config['window_length']
@@ -21,7 +21,7 @@ class sandbox:
         env.set_window_visible(True)
         env.init()
         action_space = env.get_available_buttons_size()
-        return env, action_space, self.INPUT_SHAPE, self.WINDOW_LENGTH
+        return env, action_space
 
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
