@@ -7,7 +7,7 @@ from doom_wrapper import sandbox
 from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
-from utils import load_config, log_feedback
+from utils import load_config, log_feedback, save, load
 
 # -----------------------------
 
@@ -85,7 +85,7 @@ while not env.is_episode_finished():  # Run until solved
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if terminal and running_reward > (min_reward + 1):
-        memory.save(model, model_target, log_dir + timestamp + "/saved_model")
+        save(model, model_target, memory, log_dir + timestamp + "/saved_model")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
@@ -96,6 +96,6 @@ while not env.is_episode_finished():  # Run until solved
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 100:
-        memory.save(model, model_target, log_dir + timestamp + "/saved_model")
+        save(model, model_target, memory, log_dir + timestamp + "/saved_model")
         print("Solved at episode {}!".format(episode_count))
         break

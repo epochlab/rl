@@ -83,22 +83,5 @@ class memory:
         for (a, b) in zip(target_weights, weights):
             a.assign(b * self.TAU + a * (1 - self.TAU))
 
-    def save(self, model, model_target, outdir):
-        model.save(outdir + '/model.h5')
-        model_target.save(outdir + '/model_target.h5')
-
-        np.save(outdir + '/action.npy', self.action_history)
-        np.save(outdir + '/state.npy', self.state_history)
-        np.save(outdir + '/state_next.npy', self.state_next_history)
-        np.save(outdir + '/reward.npy', self.reward_history)
-        np.save(outdir + '/terminal.npy', self.terminal_history)
-
-    def load(self, outdir):
-        model = tf.keras.models.load_model(outdir + '/model.h5')
-        model_target = tf.keras.models.load_model(outdir + '/model_target.h5')
-
-        self.action_history = np.load(outdir + '/action.npy')
-        self.state_history = np.load(outdir + '/state.npy')
-        self.state_next_history = np.load(outdir + '/state_next.npy')
-        self.reward_history = np.load(outdir + '/reward.npy')
-        self.terminal_history = np.load(outdir + '/terminal.npy')
+    def fetch(self):
+        return self.action_history, self.state_history, self.state_next_history, self.reward_history, self.terminal_history
