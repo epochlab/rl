@@ -9,11 +9,11 @@ from doom_wrapper import sandbox
 
 def load_config():
     with open('config.yaml') as f:
-        return yaml.load(f, Loader=yaml.FullLoader)
+        return yaml.full_load(f)
 
-def capture(env, timestep, sequence):
+def capture(env, config, timestep, sequence):
     if timestep < 600:
-        frame = sandbox().render(env)
+        frame = sandbox(config).render(env)
         sequence.append(frame)
     return sequence
 

@@ -7,7 +7,9 @@ from doom_wrapper import sandbox
 from agent import agent
 from memory import memory
 from networks import dqn, dueling_dqn
-from utils import log_feedback
+from utils import load_config, log_feedback
+
+# -----------------------------
 
 physical_devices = tf.config.experimental.list_physical_devices("GPU")
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -16,29 +18,26 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-ENV_NAME = '/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg'
-
-DOUBLE = True                                   # Double DQN
-FIXED_Q = False                          # Dynamic update
-
+config = load_config()['doom']
 log_dir = "metrics/"
 
 # -----------------------------
 
-# Build sandbox environment
-sandbox = sandbox()
+ENV_NAME = config['env_name']
+DOUBLE = config['double']
+FIXED_Q = config['fixed_q']
+
+sandbox = sandbox(config)
 env, action_space, input_shape, window_length = sandbox.build_env(ENV_NAME)
 
-# Compile neural networks
 model = dueling_dqn(input_shape, window_length, action_space)
 model_target = dueling_dqn(input_shape, window_length, action_space)
-# model.summary()
+model.summary()
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
-# Build Agent
-agent = agent(env, action_space)
-memory = memory(action_space)
+agent = agent(config, env, action_space)
+memory = memory(config, action_space)
 
 # -----------------------------
 

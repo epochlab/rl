@@ -4,15 +4,15 @@ import numpy as np
 import tensorflow as tf
 
 class memory:
-    def __init__(self, action_space):
+    def __init__(self, config, action_space):
         self.ACTION_SPACE = action_space
 
-        self.BATCH_SIZE = 32
-        self.MAX_MEMORY_LENGTH = 50000
-        self.UPDATE_AFTER_ACTIONS = 100
-        self.GAMMA = 0.99
-        self.UPDATE_TARGET_NETWORK = 3000
-        self.TAU = 0.08
+        self.BATCH_SIZE = config['batch_size']
+        self.MAX_MEMORY_LENGTH = config['max_memory_length']
+        self.UPDATE_AFTER_ACTIONS = config['update_after_actions']
+        self.GAMMA = config['gamma']
+        self.UPDATE_TARGET_NETWORK = config['update_target_network']
+        self.TAU = config['tau']
 
         self.action_history = []
         self.state_history = []

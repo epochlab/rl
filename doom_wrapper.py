@@ -8,11 +8,11 @@ from skimage import transform, color
 from collections import deque
 
 class sandbox:
-    def __init__(self):
-        self.INPUT_SHAPE = (84, 84)
-        self.WINDOW_LENGTH = 4
-        self.FPS = 4
-        self.GRADE = True
+    def __init__(self, config):
+        self.INPUT_SHAPE = config['input_shape']
+        self.WINDOW_LENGTH = config['window_length']
+        self.FPS = config['fps']
+        self.GRADE = config['grade']
 
     def build_env(self, config_path):
         env = vizdoom.DoomGame()
