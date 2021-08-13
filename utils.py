@@ -6,17 +6,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
-from doom_wrapper import sandbox
-
 def load_config():
     with open('config.yaml') as f:
         return yaml.full_load(f)
 
-def capture(env, config, timestep, sequence):
-    if timestep < 600:
-        frame = sandbox(config).render(env)
-        sequence.append(frame)
-    return sequence
+def capture(env, sandbox, sequence):
+    frame = sandbox.render(env)
+    sequence.append(frame)
+    return(sequence)
 
 def render_gif(frames, filename):
     return imageio.mimsave(filename + '.gif', frames)
