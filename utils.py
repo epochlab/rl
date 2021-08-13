@@ -35,7 +35,6 @@ def save(model, model_target, memory, outdir):
     model_target.save(outdir + '/model_target.h5')
 
     action_history, state_history, state_next_history, reward_history, terminal_history = memory.fetch()
-
     np.save(outdir + '/action.npy', action_history)
     np.save(outdir + '/state.npy', state_history)
     np.save(outdir + '/state_next.npy', state_next_history)
@@ -47,7 +46,6 @@ def load(memory, outdir):
     model_target = tf.keras.models.load_model(outdir + '/model_target.h5')
 
     action_history, state_history, state_next_history, reward_history, terminal_history = memory.fetch()
-
     action_history = np.load(outdir + '/action.npy')
     state_history = np.load(outdir + '/state.npy')
     state_next_history = np.load(outdir + '/state_next.npy')
