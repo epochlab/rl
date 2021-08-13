@@ -23,12 +23,8 @@ log_dir = "metrics/"
 
 # -----------------------------
 
-ENV_NAME = config['env_name']
-DOUBLE = config['double']
-FIXED_Q = config['fixed_q']
-
 sandbox = sandbox(config)
-env, action_space, input_shape, window_length = sandbox.build_env(ENV_NAME)
+env, action_space, input_shape, window_length = sandbox.build_env(config['env_name'])
 
 model = dueling_dqn(input_shape, window_length, action_space)
 model_target = dueling_dqn(input_shape, window_length, action_space)
@@ -72,9 +68,9 @@ while not env.is_episode_finished():  # Run until solved
     else:
         episode_reward += reward
 
-    memory.learn(frame_count, model, model_target, optimizer, DOUBLE)                                                 # Learn every fourth frame and once batch size is over 32
+    memory.learn(frame_count, model, model_target, optimizer, config['double'])                                                 # Learn every fourth frame and once batch size is over 32
 
-    if FIXED_Q:                                                                                                       # Update the the target network with new weights
+    if config['fixed_q']:                                                                                                       # Update the the target network with new weights
         memory.fixed_q(model_target.trainable_variables, model.trainable_variables)
     else:
         memory.static_target(frame_count, model, model_target)
