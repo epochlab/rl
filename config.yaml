@@ -8,7 +8,18 @@
 
     double: True
     fixed_q: False
+    use_per: True
+
+    max_memory_length: 50000
+    memory_alpha: 0.6
+    memory_eps: 0.01
+
     learning_rate: 0.0001
+    batch_size: 32
+    gamma: 0.99
+    update_after_actions: 100
+    update_target_network: 3000
+    tau: 0.08
 
     epsilon: 1.0
     epsilon_random_frames: 5000
@@ -16,10 +27,3 @@
     epsilon_min: 0.0001
     epsilon_max: 1.0
     epsilon_annealer: (epsilon_max - epsilon_min)
-
-    max_memory_length: 50000
-    batch_size: 32
-    gamma: 0.99
-    update_after_actions: 100
-    update_target_network: 3000
-    tau: 0.08

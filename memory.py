@@ -6,9 +6,9 @@ import tensorflow as tf
 from sum_tree import SumTree
 
 class ExperienceReplayMemory:
-    def __init__(self, config):
-        self.BATCH_SIZE = config['batch_size']
-        self.MAX_MEMORY_LENGTH = config['max_memory_length']
+    def __init__(self, max_memory_length, batch_size):
+        self.MAX_MEMORY_LENGTH = max_memory_length
+        self.BATCH_SIZE = batch_size
 
         self.action_history = []
         self.state_history = []
@@ -60,7 +60,7 @@ class PrioritizedReplayMemory:
         return self.TREE.total_sum()
 
     def push(self, event, td_error):
-        priority = get_priority(td_error)
+        priority = self.get_priority(td_error)
         self.TREE.insert(event, priority)
 
     def sample(self, batch_size):
