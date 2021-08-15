@@ -41,7 +41,9 @@ class Agent:
     def learn(self, frame_count, memory, model, model_target, optimizer, double):
         if frame_count % self.UPDATE_AFTER_ACTIONS == 0 and frame_count > self.BATCH_SIZE:
             # Sample from replay buffer
-            action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = memory.sample()
+            # action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = memory.sample()
+            samples, indices, priorities = memory.sample(self.BATCH_SIZE)
+            action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = samples
 
             # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
             q = model.predict(state_next_sample)
@@ -66,7 +68,10 @@ class Agent:
             # Backpropagation
             grads = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
-            return loss
+
+            td_error = abs(q_action - q_samp) + 0.1
+            memory.update(indices, td_error)
+            return loss, td_error
 
     def static_target(self, frame_count, model, model_target):
         if frame_count % self.UPDATE_TARGET_NETWORK == 0:

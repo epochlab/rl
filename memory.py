@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import random
 import numpy as np
 import tensorflow as tf
 
@@ -77,11 +78,11 @@ class PrioritizedReplayMemory:
             (idx, priority, data) = self.TREE.get(s)
 
             batch.append(data)
-            indicies.append(idx)
+            indices.append(idx)
             priorities.append(priority)
 
         samples = map(np.array, zip(*batch))
-        return samples, indicies, priorities
+        return samples, indices, priorities
 
     def update(self, idx, td_error):
         if isinstance(idx, list):
