@@ -33,8 +33,11 @@ model.summary()
 optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
 agent = Agent(config, sandbox, env, action_space)
-# memory = ExperienceReplayMemory(config['max_memory_length'], config['batch_size'])
-memory = PrioritizedReplayMemory(config['max_memory_length'], config['memory_alpha'], config['memory_eps'])
+
+if config['use_per']:
+    memory = PrioritizedReplayMemory(config['max_memory_length'], config['memory_alpha'], config['memory_eps'])
+else:
+    memory = ExperienceReplayMemory(config['max_memory_length'], config['batch_size'])
 
 # -----------------------------
 
@@ -58,9 +61,12 @@ while not env.is_episode_finished():  # Run until solved
     action = agent.exploration(frame_count, state, model)                                                   # Use epsilon-greedy for exploration
     state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
 
-    event = (action, state, state_next, reward, terminal)                                                   # PrioritizedReplayMemory
-    td_error = agent.td_error(model, model_target, action, state, state_next, reward, terminal)
-    memory.push(event, td_error)
+    if config['use_per']:
+        event = (action, state, state_next, reward, terminal)                                               # PrioritizedReplayMemory
+        td_error = agent.td_error(model, model_target, action, state, state_next, reward, terminal)
+        memory.push(event, td_error)
+    else:
+        memory.push(action, state, state_next, reward, terminal)                                            # Save actions and states to ExperienceReplayMemory
 
     prev_info = info
     state = state_next
@@ -79,7 +85,8 @@ while not env.is_episode_finished():  # Run until solved
     else:
         agent.static_target(frame_count, model, model_target)
 
-    # memory.limit()                                                                                         # Limit memory cache to defined length
+    if not config['use_per']:
+        memory.limit()                                                                                     # Limit memory cache to defined length
 
     # Update running reward to check condition for solving
     episode_reward_history.append(episode_reward)

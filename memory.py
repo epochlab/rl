@@ -17,7 +17,7 @@ class ExperienceReplayMemory:
         self.reward_history = []
         self.terminal_history = []
 
-    def add_memory(self, action, state, state_next, reward, terminal):
+    def push(self, action, state, state_next, reward, terminal):
         self.action_history.append(action)
         self.state_history.append(state)
         self.state_next_history.append(state_next)

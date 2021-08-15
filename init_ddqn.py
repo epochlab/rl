@@ -33,7 +33,7 @@ model.summary()
 optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
 agent = Agent(config, sandbox, env, action_space)
-memory = ExperienceReplayMemory(config)
+memory = ExperienceReplayMemory(config['max_memory_length'], config['batch_size'])
 
 # -----------------------------
 
@@ -56,7 +56,7 @@ while not env.is_episode_finished():  # Run until solved
 
     action = agent.exploration(frame_count, state, model)                                                   # Use epsilon-greedy for exploration
     state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
-    memory.add_memory(action, state, state_next, reward, terminal)                                          # Save actions and states in replay buffer
+    memory.push(action, state, state_next, reward, terminal)                                                # Save actions and states in replay buffer
 
     prev_info = info
     state = state_next
@@ -68,14 +68,14 @@ while not env.is_episode_finished():  # Run until solved
     else:
         episode_reward += reward
 
-    agent.learn(frame_count, memory, model, model_target, optimizer, config['double'])                                                 # Learn every fourth frame and once batch size is over 32
+    agent.learn(frame_count, memory, model, model_target, optimizer, config['double'])                      # Learn every fourth frame and once batch size is over 32
 
-    if config['fixed_q']:                                                                                                       # Update the the target network with new weights
+    if config['fixed_q']:                                                                                   # Update the the target network with new weights
         agent.fixed_q(model_target.trainable_variables, model.trainable_variables)
     else:
         agent.static_target(frame_count, model, model_target)
 
-    memory.limit()                                                                                                    # Limit memory cache to defined length
+    memory.limit()                                                                                          # Limit memory cache to defined length
 
     # Update running reward to check condition for solving
     episode_reward_history.append(episode_reward)
