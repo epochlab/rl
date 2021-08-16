@@ -112,7 +112,7 @@ class Agent:
         return error
 
     def evaluate(self, model, log_dir, episode_id):
-        info, prev_info, stack, state = self.SANDBOX.reset(self.ENV)
+        info, prev_info, stack, state = self.SANDBOX.reset_stack(self.ENV)
 
         episode_reward = 0
         frame_count = 0
