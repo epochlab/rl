@@ -54,7 +54,7 @@ min_reward = 0
 
 # -----------------------------
 
-info, prev_info, stack, state = sandbox.reset_stack(env)
+info, prev_info, stack, state = sandbox.reset(env)
 
 while not env.is_episode_finished():  # Run until solved
 
