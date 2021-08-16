@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard
 
 def load_config():
-    with open('config.yaml') as f:
+    with open('config.yml') as f:
         return yaml.full_load(f)
 
 def capture(env, sandbox, sequence):
