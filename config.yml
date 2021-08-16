@@ -11,7 +11,6 @@
     double: True
     fixed_q: False
     use_per: True
-    load_model: False
 
     memory_capacity: 50000
     memory_alpha: 0.6
@@ -46,7 +45,6 @@
     double: True
     fixed_q: False
     use_per: False
-    load_model: False
 
     memory_capacity: 50000
     memory_alpha: 0.6
@@ -55,7 +53,7 @@
     learning_rate: 0.0001
     batch_size: 32
     gamma: 0.99
-    update_after_actions: 100
+    update_after_actions: 5
     update_target_network: 3000
     tau: 0.08
 
