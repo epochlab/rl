@@ -3,6 +3,7 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import backend as K
+from tensorflow.keras.layers import LSTM, TimeDistributed
 
 def dqn(input_shape, window_length, action_space):
     inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length,))
@@ -34,4 +35,22 @@ def dueling_dqn(input_shape, window_length, action_space):
     adv = layers.Lambda(lambda a: a[:, :] - K.mean(a[:, :], keepdims=True), output_shape=(action_space,))(adv)
 
     action = layers.Add()([value, adv])
+    return keras.Model(inputs=inputs, outputs=action)
+
+def drqn(input_shape, action_space):
+    inputs = layers.Input(shape=(input_shape[0], input_shape[1]))
+
+    layer1 = TimeDistributed(layers.Conv2D(32, 8, strides=4, activation="relu"))(inputs)
+    layer2 = TimeDistributed(layers.Conv2D(64, 4, strides=2, activation="relu"))(layer1)
+    layer3 = TimeDistributed(layers.Conv2D(64, 3, strides=1, activation="relu"))(layer2)
+    layer4 = TimeDistributed(layers.flatten())(layer3)
+
+    # # Use all traces
+    # layer5 = LSTM(512, return_sequences=True, activation='tanh')(layer4)
+    # action = TimeDistributed(layers.Dense(output_dim=action_space, activation='linear'))(layer5)
+
+    # Use final trace
+    layer5 = LSTM(512, activation='tanh')(layer4)
+    action = layers.Dense(output_dim=action_space, activation='linear')(layer5)
+    
     return keras.Model(inputs=inputs, outputs=action)
