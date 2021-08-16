@@ -107,6 +107,6 @@ while not env.is_episode_finished():  # Run until solved
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 100:
-        save(config, model, model_target, log_dir + timestamps)
+        save(config, model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
