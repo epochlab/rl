@@ -35,6 +35,12 @@ class Sandbox:
 
         return frame
 
+    def process_rgb(self, frame, size):
+        frame = np.rollaxis(frame, 0, 3)
+        frame = frame[10:-10,20:-20]
+        frame = skimage.transform.resize(frame, size)
+        return frame
+
     def framestack(self, stack, state, new_episode):
         frame = self.preprocess(state, self.INPUT_SHAPE)
         if new_episode:
