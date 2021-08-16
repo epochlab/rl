@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from doom_wrapper import Sandbox
+from wrappers.doom_wrapper import Sandbox
 from agent import Agent
 from memory import ExperienceReplayMemory, PrioritizedReplayMemory
 from networks import dqn, dueling_dqn
