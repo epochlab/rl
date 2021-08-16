@@ -37,20 +37,20 @@ def dueling_dqn(input_shape, window_length, action_space):
     action = layers.Add()([value, adv])
     return keras.Model(inputs=inputs, outputs=action)
 
-def drqn(input_shape, action_space):
-    inputs = layers.Input(shape=(input_shape[0], input_shape[1]))
+def drqn(state_size, action_space):
+    inputs = layers.Input(shape=(state_size))
 
     layer1 = TimeDistributed(layers.Conv2D(32, 8, strides=4, activation="relu"))(inputs)
     layer2 = TimeDistributed(layers.Conv2D(64, 4, strides=2, activation="relu"))(layer1)
     layer3 = TimeDistributed(layers.Conv2D(64, 3, strides=1, activation="relu"))(layer2)
-    layer4 = TimeDistributed(layers.flatten())(layer3)
+    layer4 = TimeDistributed(layers.Flatten())(layer3)
 
     # # Use all traces
     # layer5 = LSTM(512, return_sequences=True, activation='tanh')(layer4)
-    # action = TimeDistributed(layers.Dense(output_dim=action_space, activation='linear'))(layer5)
+    # action = TimeDistributed(layers.Dense(action_space, activation='linear'))(layer5)
 
     # Use final trace
     layer5 = LSTM(512, activation='tanh')(layer4)
-    action = layers.Dense(output_dim=action_space, activation='linear')(layer5)
+    action = layers.Dense(action_space, activation='linear')(layer5)
     
     return keras.Model(inputs=inputs, outputs=action)
