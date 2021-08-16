@@ -33,28 +33,28 @@ model.summary()
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
-# agent = Agent(config, sandbox, env, action_space)
-#
-# if config['use_per']:
-#     memory = PrioritizedReplayMemory(config)
-# else:
-#     memory = ExperienceReplayMemory(config)
-#
-# # -----------------------------
-#
-# timestamp, summary_writer = log_feedback(model, log_dir)
-# print("Job ID:", timestamp)
-#
-# frame_count = 0
-# episode_count = 0
-#
-# episode_reward_history = []
-# episode_reward = 0
-# eval_reward = 0
-# min_reward = 0
-#
-# # -----------------------------
-#
+agent = Agent(config, sandbox, env, action_space)
+
+if config['use_per']:
+    memory = PrioritizedReplayMemory(config)
+else:
+    memory = ExperienceReplayMemory(config)
+
+# -----------------------------
+
+timestamp, summary_writer = log_feedback(model, log_dir)
+print("Job ID:", timestamp)
+
+frame_count = 0
+episode_count = 0
+
+episode_reward_history = []
+episode_reward = 0
+eval_reward = 0
+min_reward = 0
+
+# -----------------------------
+
 # info, prev_info, stack, state = sandbox.reset(env)
 #
 # while not env.is_episode_finished():  # Run until solved
