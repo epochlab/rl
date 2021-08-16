@@ -24,6 +24,8 @@ class Agent:
         self.GAMMA = config['gamma']
         self.UPDATE_TARGET_NETWORK = config['update_target_network']
         self.TAU = config['tau']
+
+        self.DOUBLE = config['double']
         self.USE_PER = config['use_per']
 
     def exploration(self, frame_count, state, model):
@@ -39,7 +41,7 @@ class Agent:
         self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)
         return action_idx
 
-    def learn(self, frame_count, memory, model, model_target, optimizer, double):
+    def learn(self, frame_count, memory, model, model_target, optimizer):
         if frame_count % self.UPDATE_AFTER_ACTIONS == 0 and frame_count > self.BATCH_SIZE:
             # Sample from replay buffer
             if self.USE_PER:
@@ -53,7 +55,7 @@ class Agent:
             target_q = model_target.predict(state_next_sample)
 
             # Build the updated Q-values for the sampled future states - DQN / DDQN
-            if double:
+            if self.DOUBLE:
                 max_q = tf.argmax(q, axis=1)
                 max_actions = tf.one_hot(max_q, self.ACTION_SPACE)
                 q_samp = reward_sample + self.GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
@@ -73,7 +75,7 @@ class Agent:
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
             td_error = abs(q_action - q_samp) + 0.1
-            
+
             if self.USE_PER:
                 memory.update(indices, td_error)
 
@@ -94,13 +96,19 @@ class Agent:
         q = model.predict(state_next)[0]
         target_q = model_target.predict(state_next)
 
-        arg_max_q = np.argmax(q)
-        q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)
-        q_samp = q_samp * (1 - terminal) - terminal
+        if self.DOUBLE:
+            max_q = np.argmax(q)
+            max_actions = tf.one_hot(max_q, self.ACTION_SPACE)
+            q_samp = reward + self.GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
+        else:
+            q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)      # Bellman Equation
 
-        q_values = model(state)
+        # arg_max_q = np.argmax(q)
+        # q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)
+        q_samp = q_samp * (1 - terminal) - terminal
         masks = tf.one_hot(action, self.ACTION_SPACE)
 
+        q_values = model(state)
         q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
 
         error = abs(q_action - q_samp) + 0.1
