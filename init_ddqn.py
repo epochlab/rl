@@ -78,7 +78,7 @@ while not env.is_episode_finished():  # Run until solved
     else:
         episode_reward += reward
 
-    agent.learn(frame_count, memory, model, model_target, optimizer)                     # Learn every fourth frame and once batch size is over 32
+    agent.learn(frame_count, memory, model, model_target, optimizer)                                       # Learn every fourth frame and once batch size is over 32
 
     if config['fixed_q']:                                                                                  # Update the the target network with new weights
         agent.fixed_q(model_target.trainable_variables, model.trainable_variables)
@@ -96,7 +96,7 @@ while not env.is_episode_finished():  # Run until solved
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if terminal and running_reward > (min_reward + 1):
-        save(model, model_target, log_dir + timestamp + "/saved_model")
+        save(config, model, model_target, log_dir + timestamp + "/saved_model")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
@@ -107,6 +107,6 @@ while not env.is_episode_finished():  # Run until solved
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 100:
-        save(model, model_target, log_dir + timestamp + "/saved_model")
+        save(config, model, model_target, log_dir + timestamp + "/saved_model")
         print("Solved at episode {}!".format(episode_count))
         break
