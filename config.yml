@@ -11,7 +11,7 @@
     double: True
     fixed_q: False
     use_per: True
-    load_model: True
+    load_model: False
 
     memory_capacity: 50000
     memory_alpha: 0.6
