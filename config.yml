@@ -36,10 +36,12 @@
     visible: True
 
     input_shape: [84, 84]
-    img_channels: 3
-    trace_length: 4
+    window_length: 4
     fps: 4
     grade: True
+
+    img_channels: 3
+    trace_length: 4
 
     double: True
     fixed_q: False
