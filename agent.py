@@ -74,8 +74,8 @@ class Agent:
             grads = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
-            td_error = abs(q_action - q_samp) + 0.1
             if self.USE_PER:
+                td_error = abs(q_action - q_samp) + 0.1
                 memory.update(indices, td_error)
 
     def static_target(self, frame_count, model, model_target):
