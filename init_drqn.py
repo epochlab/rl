@@ -69,7 +69,7 @@ while not env.is_episode_finished():  # Run until solved
     else:
         action_idx = random.randrange(action_space)
 
-    # state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)            # Apply the sampled action in our environment
+    state_next, reward, terminal, info = sandbox.step_lstm(env, prev_info, action_idx, action_space)     # Apply the sampled action in our environment
 
 #     if config['use_per']:
 #         event = (action, state, state_next, reward, terminal)                                               # PrioritizedReplayMemory
