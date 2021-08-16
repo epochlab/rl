@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import random
 import numpy as np
 import tensorflow as tf
 
@@ -53,15 +54,23 @@ episode_reward = 0
 eval_reward = 0
 min_reward = 0
 
+episode_buf = []
+
 # -----------------------------
 
 info, prev_info, state = sandbox.reset_state(env)
 
-# while not env.is_episode_finished():  # Run until solved
-#
-#     action = agent.exploration(frame_count, state, model)                                                   # Use epsilon-greedy for exploration
-#     state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
-#
+while not env.is_episode_finished():  # Run until solved
+
+    if len(episode_buf) > config['trace_length']:
+        state_series = np.array([trace[-1] for trace in episode_buf[-config['trace_length']:]])
+        state_series = np.expand_dims(state_series, axis=0)
+        action_idx = agent.exploration(frame_count, state_series, model)                                      # Use epsilon-greedy for exploration
+    else:
+        action_idx = random.randrange(action_space)
+
+    # state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)            # Apply the sampled action in our environment
+
 #     if config['use_per']:
 #         event = (action, state, state_next, reward, terminal)                                               # PrioritizedReplayMemory
 #         td_error = agent.td_error(model, model_target, action, state, state_next, reward, terminal)
