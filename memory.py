@@ -8,7 +8,7 @@ from sum_tree import SumTree
 
 class ExperienceReplayMemory:
     def __init__(self, config):
-        self.MAX_MEMORY_LENGTH = config['max_memory_length']
+        self.MAX_MEMORY_LENGTH = config['memory_capacity']
         self.BATCH_SIZE = config['batch_size']
 
         self.action_history = []
@@ -47,7 +47,7 @@ class ExperienceReplayMemory:
 
 class PrioritizedReplayMemory:
     def __init__(self, config):
-        self.TREE = SumTree(config['max_memory_length'])
+        self.TREE = SumTree(config['memory_capacity'])
         self.ALPHA = config['memory_alpha']
         self.EPS = config['memory_eps']
 

@@ -75,11 +75,8 @@ class Agent:
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
             td_error = abs(q_action - q_samp) + 0.1
-
             if self.USE_PER:
                 memory.update(indices, td_error)
-
-            return loss, td_error
 
     def static_target(self, frame_count, model, model_target):
         if frame_count % self.UPDATE_TARGET_NETWORK == 0:
