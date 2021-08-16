@@ -27,24 +27,10 @@ def log_feedback(model, log_dir):
     os.system("tensorboard --logdir=" + str(log_dir) + " --port=6006 &")
     return timestamp, summary_writer
 
-def save(model, model_target, memory, outdir):
+def save(model, model_target, outdir):
     model.save(outdir + '/model.h5')
     model_target.save(outdir + '/model_target.h5')
-
-    action_history, state_history, state_next_history, reward_history, terminal_history = memory.fetch()
-    np.save(outdir + '/action.npy', action_history)
-    np.save(outdir + '/state.npy', state_history)
-    np.save(outdir + '/state_next.npy', state_next_history)
-    np.save(outdir + '/reward.npy', reward_history)
-    np.save(outdir + '/terminal.npy', terminal_history)
-
-def load(memory, outdir):
+    
+def load(outdir):
     model = tf.keras.models.load_model(outdir + '/model.h5')
     model_target = tf.keras.models.load_model(outdir + '/model_target.h5')
-
-    action_history, state_history, state_next_history, reward_history, terminal_history = memory.fetch()
-    action_history = np.load(outdir + '/action.npy')
-    state_history = np.load(outdir + '/state.npy')
-    state_next_history = np.load(outdir + '/state_next.npy')
-    reward_history = np.load(outdir + '/reward.npy')
-    terminal_history = np.load(outdir + '/terminal.npy')

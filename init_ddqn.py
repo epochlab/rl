@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from wrappers.doom_wrapper import Sandbox
+from wrappers.doom import Sandbox
 from agent import Agent
 from memory import ExperienceReplayMemory, PrioritizedReplayMemory
 from networks import dqn, dueling_dqn
@@ -35,9 +35,9 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 agent = Agent(config, sandbox, env, action_space)
 
 if config['use_per']:
-    memory = PrioritizedReplayMemory(config['max_memory_length'], config['memory_alpha'], config['memory_eps'])
+    memory = PrioritizedReplayMemory(config)
 else:
-    memory = ExperienceReplayMemory(config['max_memory_length'], config['batch_size'])
+    memory = ExperienceReplayMemory(config)
 
 # -----------------------------
 
@@ -96,7 +96,7 @@ while not env.is_episode_finished():  # Run until solved
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if terminal and running_reward > (min_reward + 1):
-        # save(model, model_target, memory, log_dir + timestamp + "/saved_model")
+        save(model, model_target, log_dir + timestamp + "/saved_model")
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
@@ -107,6 +107,6 @@ while not env.is_episode_finished():  # Run until solved
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 100:
-        # save(model, model_target, memory, log_dir + timestamp + "/saved_model")
+        save(model, model_target, log_dir + timestamp + "/saved_model")
         print("Solved at episode {}!".format(episode_count))
         break
