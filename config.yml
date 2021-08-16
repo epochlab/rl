@@ -46,7 +46,7 @@
     fixed_q: False
     use_per: False
 
-    memory_capacity: 50000
+    memory_capacity: 10000
     memory_alpha: 0.6
     memory_eps: 0.01
 

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from wrappers.doom import Sandbox
 from agent import Agent
-from memory import ExperienceReplayMemory, PrioritizedReplayMemory
+from memory import RecurrentMemory
 from networks import dqn, dueling_dqn, drqn
 from utils import load_config, log_feedback, save, load
 
@@ -36,10 +36,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
 agent = Agent(config, sandbox, env, action_space)
 
-if config['use_per']:
-    memory = PrioritizedReplayMemory(config)
-else:
-    memory = ExperienceReplayMemory(config)
+memory = RecurrentMemory(config)
 
 # -----------------------------
 
@@ -69,25 +66,23 @@ while not env.is_episode_finished():  # Run until solved
     else:
         action_idx = random.randrange(action_space)
 
-    state_next, reward, terminal, info = sandbox.step_lstm(env, prev_info, action_idx, action_space)     # Apply the sampled action in our environment
+    state_next, reward, terminal, info = sandbox.step_lstm(env, prev_info, action_idx, action_space)          # Apply the sampled action in our environment
 
-#     if config['use_per']:
-#         event = (action, state, state_next, reward, terminal)                                               # PrioritizedReplayMemory
-#         td_error = agent.td_error(model, model_target, action, state, state_next, reward, terminal)
-#         memory.push(event, td_error)
-#     else:
-#         memory.push(action, state, state_next, reward, terminal)                                            # Save actions and states to ExperienceReplayMemory
-#
-#     prev_info = info
-#     state = state_next
-#     frame_count += 1
-#
-#     if terminal:
-#         episode_reward = 0
-#         episode_count += 1
-#     else:
-#         episode_reward += reward
-#
+    episode_buf.append([action_idx, state, state_next, reward])
+    if terminal:
+        memory.push(episode_buf)
+        episode_buf = []
+
+    prev_info = info
+    state = state_next
+    frame_count += 1
+
+    if terminal:
+        episode_reward = 0
+        episode_count += 1
+    else:
+        episode_reward += reward
+
 #     agent.learn(frame_count, memory, model, model_target, optimizer)                                       # Learn every fourth frame and once batch size is over 32
 #
 #     if config['fixed_q']:                                                                                  # Update the the target network with new weights

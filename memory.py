@@ -92,3 +92,23 @@ class PrioritizedReplayMemory:
         else:
             priority = self.get_priority(td_error)
             self.TREE.update(idx, priority)
+
+class RecurrentMemory:
+    def __init__(self, config):
+        self.MEMORY = []
+        self.MEMORY_CAPACITY = config['memory_capacity']
+        self.BATCH_SIZE = config['batch_size']
+        self.TRACE_LENGTH = config['trace_length']
+
+    def push(self, episode_experience):
+        if len(self.MEMORY) + 1 >= self.MEMORY_CAPACITY:
+            self.MEMORY[0:(1+len(self.MEMORY))-self.MEMORY_CAPACITY] = []
+        self.MEMORY.append(episode_experience)
+
+    def sample(self, trace_length):
+        sampled_episodes = random.sample(self.MEMORY, self.BATCH_SIZE)
+        traces = []
+        for episode in sampled_episodes:
+            point = np.random.randint(0, len(episode) + 1 - self.TRACE_LENGTH)
+            traces.append(episode[point:point + self.TRACE_LENGTH])
+        return np.array(traces)
