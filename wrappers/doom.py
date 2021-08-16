@@ -52,7 +52,7 @@ class Sandbox:
         stack_state = np.stack(stack, axis=2)
         return stack, stack_state
 
-    def reset(self, env):
+    def reset_stack(self, env):
         env.new_episode()
         state = env.get_state()
         info = state.game_variables
@@ -62,6 +62,15 @@ class Sandbox:
         stack = deque([np.zeros(self.INPUT_SHAPE, dtype=int) for i in range(self.WINDOW_LENGTH)], maxlen=4)
         stack, stack_state = self.framestack(stack, frame, True)
         return info, prev_info, stack, stack_state
+
+    def reset_state(self, env):
+        env.new_episode()
+        state = env.get_state()
+        info = state.game_variables
+        prev_info = info
+
+        frame = state.screen_buffer
+        return info, prev_info, frame
 
     def step(self, env, stack, prev_info, action_idx, action_space):
         action = np.zeros([action_space])

@@ -55,8 +55,8 @@ min_reward = 0
 
 # -----------------------------
 
-# info, prev_info, stack, state = sandbox.reset(env)
-#
+info, prev_info, state = sandbox.reset_state(env)
+
 # while not env.is_episode_finished():  # Run until solved
 #
 #     action = agent.exploration(frame_count, state, model)                                                   # Use epsilon-greedy for exploration
