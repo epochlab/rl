@@ -44,7 +44,7 @@ def viewslice(state, count):
 def heatmap(frame, model):
     with tf.GradientTape() as tape:
         conv_layer = model.get_layer('conv2d_2')
-        iterate = tf.keras.models.Model([model.inputs], [model.output, cconv_layer.output])
+        iterate = tf.keras.models.Model([model.inputs], [model.output, conv_layer.output])
         _model, conv_layer = iterate(frame[np.newaxis, :, :, :])
         _class = _model[:, np.argmax(_model[0])]
         grads = tape.gradient(_class, conv_layer)

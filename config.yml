@@ -1,7 +1,7 @@
 ---
   doom-ddqn:
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
-    visible: True
+    visible: False
 
     input_shape: [84, 84]
     window_length: 4
