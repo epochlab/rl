@@ -35,13 +35,18 @@ def feature_model(model):
     feature_model = tf.keras.Model(inputs = model.inputs, outputs = out)
     return feature_model
 
+def view_human(env):
+    frame = sandbox.render(env)
+    frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    return frame_RGB
+
 def view_slice(state, count):
     frame = np.array(state) * 255.0
     slice = processed_frame = np.repeat(frame[:, :, count, np.newaxis], 3, axis=2)
     slice = cv2.resize(slice, dim)
     return slice
 
-def attention_window(frame, model, heatmap):
+def feature_window(frame, model, heatmap):
     with tf.GradientTape() as tape:
         conv_layer = model.get_layer('conv2d')
         iterate = tf.keras.models.Model([model.inputs], [model.output, conv_layer.output])
@@ -53,7 +58,7 @@ def attention_window(frame, model, heatmap):
 
         atten_map = np.maximum(attention, 0) / np.max(attention)
         atten_map = atten_map.reshape((20, 20))
-        atten_map = cv2.resize(atten_map, dim)
+        atten_map = cv2.resize(atten_map, dim, interpolation = cv2.INTER_AREA)
         atten_map = np.uint8(atten_map * 255.0)
 
         if heatmap:
@@ -61,6 +66,18 @@ def attention_window(frame, model, heatmap):
             return heatmap
         else:
             return atten_map
+
+def attention_composite():
+    human = view_human(env)
+    attention = feature_window(state, model, False)
+    attention = np.expand_dims(attention, axis=0)
+
+    mask = np.zeros_like(human)
+    mask[:,:,0] = attention
+    mask[:,:,1] = attention
+    mask[:,:,2] = attention
+
+    return human * (mask / 255.0)
 
 # -----------------------------
 
@@ -74,8 +91,12 @@ model = load_model(log_dir)
 
 # -----------------------------
 
+human = view_human(env)
 slice = view_slice(state, 0)
-heatmap = attention_window(state, model, True)
+heatmap = feature_window(state, model, True)
+attention = attention_composite()
 
+cv2.imwrite('human.png', human)
 cv2.imwrite('slice.png', slice)
 cv2.imwrite('heatmap.png', heatmap)
+cv2.imwrite('attention.png', attention)
