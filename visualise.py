@@ -35,28 +35,32 @@ def feature_model(model):
     feature_model = tf.keras.Model(inputs = model.inputs, outputs = out)
     return feature_model
 
-def viewslice(state, count):
-    frame = np.array(state)
-    frame = processed_frame = np.repeat(frame[:, :, count, np.newaxis], 3, axis=2)
-    frame = skimage.transform.resize(frame, dim)
-    return frame
+def view_slice(state, count):
+    frame = np.array(state) * 255.0
+    slice = processed_frame = np.repeat(frame[:, :, count, np.newaxis], 3, axis=2)
+    slice = cv2.resize(slice, dim)
+    return slice
 
-def heatmap(frame, model):
+def attention_window(frame, model, heatmap):
     with tf.GradientTape() as tape:
-        conv_layer = model.get_layer('conv2d_2')
+        conv_layer = model.get_layer('conv2d')
         iterate = tf.keras.models.Model([model.inputs], [model.output, conv_layer.output])
         _model, conv_layer = iterate(frame[np.newaxis, :, :, :])
         _class = _model[:, np.argmax(_model[0])]
         grads = tape.gradient(_class, conv_layer)
         pooled_grads = K.mean(grads, axis=(0, 1, 2))
+        attention = tf.reduce_mean(tf.multiply(pooled_grads, conv_layer), axis=-1)
 
-        heatmap = tf.reduce_mean(tf.multiply(pooled_grads, conv_layer), axis=-1)
-        heatmap = np.maximum(heatmap, 0)
-        heatmap /= np.max(heatmap)
-        heatmap = heatmap.reshape((7, 7))
-        heatmap = cv2.resize(heatmap, dim)
-        heatmap = cv2.applyColorMap(np.uint8(255 * heatmap), cv2.COLORMAP_JET)
-        return heatmap
+        atten_map = np.maximum(attention, 0) / np.max(attention)
+        atten_map = atten_map.reshape((20, 20))
+        atten_map = cv2.resize(atten_map, dim)
+        atten_map = np.uint8(atten_map * 255.0)
+
+        if heatmap:
+            heatmap = cv2.applyColorMap(atten_map, cv2.COLORMAP_JET)
+            return heatmap
+        else:
+            return atten_map
 
 # -----------------------------
 
@@ -70,5 +74,8 @@ model = load_model(log_dir)
 
 # -----------------------------
 
-# heatmap = heatmap(state, model)
-# cv2.imwrite('heatmap.png', heatmap)
+slice = view_slice(state, 0)
+heatmap = attention_window(state, model, True)
+
+cv2.imwrite('slice.png', slice)
+cv2.imwrite('heatmap.png', heatmap)
