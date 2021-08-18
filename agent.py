@@ -28,6 +28,13 @@ class Agent:
         self.DOUBLE = config['double']
         self.USE_PER = config['use_per']
 
+    def get_action(self, state, model):
+        state_tensor = tf.convert_to_tensor(state)
+        state_tensor = tf.expand_dims(state_tensor, 0)
+        action_probs = model(state_tensor, training=False)
+        action = tf.argmax(action_probs[0]).numpy()
+        return action
+
     def exploration(self, frame_count, state, model):
         if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
             action_idx = random.randrange(self.ACTION_SPACE)

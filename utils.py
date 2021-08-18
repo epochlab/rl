@@ -11,7 +11,7 @@ def load_config():
         return yaml.full_load(f)
 
 def capture(env, sandbox, sequence):
-    frame = sandbox.render(env)
+    frame = sandbox.view_human(env)
     sequence.append(frame)
     return(sequence)
 

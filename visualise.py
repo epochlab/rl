@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import cv2
 import numpy as np
+
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
-import cv2, skimage
-from skimage import transform
-
+from agent import Agent
 from wrappers.doom import Sandbox
 from networks import dqn, dueling_dqn
 from utils import load_config, render_gif, load
@@ -25,28 +25,6 @@ def filter_summary(model):
         if 'conv' in layer.name:
             filters, biases = layer.get_weights()
             print(layer.name, filters.shape)
-
-def view_human(env):
-    state = env.get_state()
-    frame = state.screen_buffer
-    frame = np.rollaxis(frame, 0, 3)
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    return frame
-
-def view_depth(env):
-    state = env.get_state()
-    depth = state.depth_buffer
-    return depth
-
-def view_automap(env):
-    state = env.get_state()
-    automap = state.automap_buffer
-    return automap
-
-def view_labels(env):
-    state = env.get_state()
-    labels = state.labels
-    return labels
 
 def view_machine(state, factor):
     state = np.array(state)
@@ -83,7 +61,7 @@ def attention_window(frame, model, heatmap):
             return atten_map
 
 def attention_comp(state):
-    human = view_human(env)
+    human = sandbox.view_human(env)
     attention = attention_window(state, model, False)
 
     mask = np.zeros_like(human)
@@ -91,7 +69,7 @@ def attention_comp(state):
     mask[:,:,1] = attention
     mask[:,:,2] = attention
 
-    comp = cv2.cvtColor(human, cv2.COLOR_RGB2BGR) * (mask / 255.0)
+    comp = human * (mask / 255.0)
     return comp
 
 def feature_model(model, depth):
@@ -110,16 +88,12 @@ def witness(env, action_space, model):
 
     while not env.is_episode_finished():
 
-        human_buf.append(cv2.cvtColor(view_human(env), cv2.COLOR_RGB2BGR))
+        human_buf.append(sandbox.view_human(env))
         state_buf.append(view_machine(state, 2))
         heatmap_buf.append(attention_window(state, model, True))
         attention_buf.append(attention_comp(state))
 
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = model(state_tensor, training=False)
-        action = tf.argmax(action_probs[0]).numpy()
-
+        action = agent.get_action(state, model)
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
 
         prev_info = info
@@ -141,13 +115,10 @@ sandbox = Sandbox(config)
 env, action_space = sandbox.build_env(config['env_name'])
 info, prev_info, stack, state = sandbox.reset(env)
 
+agent = Agent(config, sandbox, env, action_space)
+
 model = load(log_dir)
 
 # -----------------------------
 
 witness(env, action_space, model)
-
-# cv2.imwrite('img_human.png', view_human(env))
-# cv2.imwrite('img_state.png', view_machine(state))
-# cv2.imwrite('img_heatmap.png', attention_window(state, model, True))
-# cv2.imwrite('img_attention.png', attention_comp())
