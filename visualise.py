@@ -72,12 +72,21 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
-def q_action(state, model):
-    state_tensor = tf.convert_to_tensor(state)
-    state_tensor = tf.expand_dims(state_tensor, 0)
-    action_probs = model(state_tensor, training=False)
-    action_idx = tf.argmax(action_probs[0]).numpy()
-    return action_probs, action_idx
+def intermediate_representation(state, model, layer_names=None, stack_state=True):
+    if isinstance(layer_names, list) or isinstance(layer_names, tuple):
+        layers = [model.get_layer(name=layer_name).output for layer_name in layer_names]
+    else:
+        layers = model.get_layer(name=layer_names).output
+
+    temp_model = tf.keras.Model(model.inputs, layers)
+
+    # Stack state 4 times
+    if stack_state:
+        if len(state.shape) == 2:
+            state = state[:, :, np.newaxis]
+        state = np.repeat(state, config['window_length'], axis=2)
+
+    return temp_model.predict(state.reshape((-1, state.shape[0], state.shape[1], config['window_length'])))
 
 def witness(env, action_space, model):
     print("Witnessing...")
@@ -89,14 +98,19 @@ def witness(env, action_space, model):
     heatmap_buf = []
     attention_buf = []
 
+    values = []
+
     while not env.is_episode_finished():
 
-        human_buf.append(sandbox.view_human(env))
-        state_buf.append(view_machine(state, 2))
-        heatmap_buf.append(attention_window(state, model, True))
-        attention_buf.append(attention_comp(state))
+        # human_buf.append(sandbox.view_human(env))
+        # state_buf.append(view_machine(state, 2))
+        # heatmap_buf.append(attention_window(state, model, True))
+        # attention_buf.append(attention_comp(state))
 
-        probability, action = q_action(state, model)
+        q_vals, value = intermediate_representation(state, model, ['add', 'dense'], stack_state=False)
+        values.append(value)
+
+        action = agent.get_action(state, model)
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
 
         prev_info = info
@@ -106,10 +120,10 @@ def witness(env, action_space, model):
         if terminal:
             break
 
-    render_gif(human_buf, log_dir + "viz_human")
-    render_gif(state_buf, log_dir + "viz_state")
-    render_gif(heatmap_buf, log_dir + "viz_heatmap")
-    render_gif(attention_buf, log_dir + "viz_attention")
+    # render_gif(human_buf, log_dir + "viz_human")
+    # render_gif(state_buf, log_dir + "viz_state")
+    # render_gif(heatmap_buf, log_dir + "viz_heatmap")
+    # render_gif(attention_buf, log_dir + "viz_attention")
 
 # -----------------------------
 
