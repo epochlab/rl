@@ -18,14 +18,13 @@ class Sandbox:
         env = vizdoom.DoomGame()
         env.load_config(config_path)
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
-        env.set_window_visible(True)
+        env.set_window_visible(False)
         env.init()
         action_space = env.get_available_buttons_size()
         return env, action_space
 
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
-        frame = frame[10:-10,20:-20]                                            # [Up: Down, Left: Right]
         frame = skimage.color.rgb2gray(frame)
         frame = skimage.transform.resize(frame, size)
 
