@@ -54,11 +54,11 @@ def attention_window(frame, model, heatmap):
         atten_map = np.uint8(atten_map * 255.0)
 
         if heatmap:
-            heatmap = cv2.applyColorMap(atten_map, cv2.COLORMAP_TURBO)
-            return heatmap
+            atten_map = cv2.applyColorMap(atten_map, cv2.COLORMAP_TURBO)
         else:
             atten_map = np.expand_dims(atten_map, axis=0)
-            return atten_map
+
+        return atten_map
 
 def attention_comp(state):
     human = sandbox.view_human(env)
@@ -71,11 +71,6 @@ def attention_comp(state):
 
     comp = human * (mask / 255.0)
     return comp
-
-def feature_model(model, depth):
-    out = model.layers[depth].output
-    feature_model = tf.keras.Model(inputs = model.inputs, outputs = out)
-    return feature_model
 
 def witness(env, action_space, model):
     info, prev_info, stack, state = sandbox.reset(env)

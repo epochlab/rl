@@ -16,6 +16,7 @@ def capture(env, sandbox, sequence):
     return(sequence)
 
 def render_gif(frames, filename):
+    frames = np.uint8(frames)
     return imageio.mimsave(filename + '.gif', frames)
 
 def log_feedback(model, log_dir):
