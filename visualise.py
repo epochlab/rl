@@ -64,7 +64,7 @@ def attention_window(frame, model, heatmap):
 
         atten_map = np.maximum(attention, 0) / np.max(attention)
         atten_map = atten_map.reshape((20, 20))
-        atten_map = cv2.resize(atten_map, dim, interpolation = cv2.INTER_AREA)
+        atten_map = cv2.resize(atten_map, dim, interpolation=cv2.INTER_AREA)
         atten_map = np.uint8(atten_map * 255.0)
 
         if heatmap:
