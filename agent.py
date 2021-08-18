@@ -39,10 +39,7 @@ class Agent:
         if frame_count < self.EPSILON_RANDOM_FRAMES or self.EPSILON > np.random.rand(1)[0]:
             action_idx = random.randrange(self.ACTION_SPACE)
         else:
-            state_tensor = tf.convert_to_tensor(state)
-            state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = model(state_tensor, training=False)
-            action_idx = tf.argmax(action_probs[0]).numpy()
+            action_idx = self.get_action(state, model)
 
         self.EPSILON -= self.EPSILON_ANNEALER / self.EPSILON_GREEDY_FRAMES
         self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)
@@ -126,18 +123,9 @@ class Agent:
         frames = []
 
         while not self.ENV.is_episode_finished():
-
-            # Capture gameplay experience
-            frames = capture(self.ENV, self.SANDBOX, frames)
-
-            # Predict action Q-values from environment state and take best action
-            state_tensor = tf.convert_to_tensor(state)
-            state_tensor = tf.expand_dims(state_tensor, 0)
-            action_probs = model(state_tensor, training=False)
-            action = tf.argmax(action_probs[0]).numpy()
-
-            # Apply the sampled action in our environment
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
+            frames = capture(self.ENV, self.SANDBOX, frames)                                                                        # Capture gameplay experience
+            action = self.get_action(state, model)                                                                                  # Predict action Q-values from environment state and take best action
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)           # Apply the sampled action in our environment
 
             episode_reward += reward
 
