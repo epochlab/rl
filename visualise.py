@@ -72,6 +72,13 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
+def q_value(state, model):
+    state_tensor = tf.convert_to_tensor(state)
+    state_tensor = tf.expand_dims(state_tensor, 0)
+    action_probs = model(state_tensor, training=False)
+    action_idx = tf.argmax(action_probs[0]).numpy()
+    return action_probs, action_idx
+
 def witness(env, action_space, model):
     info, prev_info, stack, state = sandbox.reset(env)
     frame_count = 0
@@ -88,8 +95,9 @@ def witness(env, action_space, model):
         heatmap_buf.append(attention_window(state, model, True))
         attention_buf.append(attention_comp(state))
 
-        action = agent.get_action(state, model)
+        probability, action = q_value(state, model)
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
+        print("Q:", probability, "Action:", action, "Reward:", reward)
 
         prev_info = info
         state = state_next
@@ -111,7 +119,6 @@ env, action_space = sandbox.build_env(config['env_name'])
 info, prev_info, stack, state = sandbox.reset(env)
 
 agent = Agent(config, sandbox, env, action_space)
-
 model = load(log_dir)
 
 # -----------------------------
