@@ -33,5 +33,5 @@ def save(model, model_target, outdir):
     model_target.save(outdir + '/model_target.h5')
 
 def load(outdir):
-    model = tf.keras.models.load_model(outdir + '/model.h5')
+    model = tf.keras.models.load_model(outdir + '/model.h5', compile=False)
     return model

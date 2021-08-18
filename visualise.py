@@ -72,7 +72,7 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
-def q_value(state, model):
+def q_action(state, model):
     state_tensor = tf.convert_to_tensor(state)
     state_tensor = tf.expand_dims(state_tensor, 0)
     action_probs = model(state_tensor, training=False)
@@ -80,6 +80,7 @@ def q_value(state, model):
     return action_probs, action_idx
 
 def witness(env, action_space, model):
+    print("Witnessing...")
     info, prev_info, stack, state = sandbox.reset(env)
     frame_count = 0
 
@@ -95,9 +96,8 @@ def witness(env, action_space, model):
         heatmap_buf.append(attention_window(state, model, True))
         attention_buf.append(attention_comp(state))
 
-        probability, action = q_value(state, model)
+        probability, action = q_action(state, model)
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
-        print("Q:", probability, "Action:", action, "Reward:", reward)
 
         prev_info = info
         state = state_next
