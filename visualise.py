@@ -9,7 +9,7 @@ from skimage import transform
 
 from wrappers.doom import Sandbox
 from networks import dqn, dueling_dqn
-from utils import load_config
+from utils import load_config, render_gif
 
 # -----------------------------
 
@@ -30,15 +30,12 @@ def filter_summary(model):
             filters, biases = layer.get_weights()
             print(layer.name, filters.shape)
 
-def feature_model(model):
-    out = model.layers[3].output
-    feature_model = tf.keras.Model(inputs = model.inputs, outputs = out)
-    return feature_model
-
 def view_human(env):
-    frame = sandbox.render(env)
-    frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    return frame_RGB
+    state = env.get_state()
+    frame = state.screen_buffer
+    frame = np.rollaxis(frame, 0, 3)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    return frame
 
 def view_machine(state):
     state = np.array(state) * 255.0
@@ -51,6 +48,21 @@ def view_machine(state):
 
     grid = np.concatenate((x0, x1, x2, x3), axis=1)
     return grid
+
+def view_depth(env):
+    state = env.get_state()
+    depth = state.depth_buffer
+    return depth
+
+def view_automap(env):
+    state = env.get_state()
+    automap = state.automap_buffer
+    return automap
+
+def view_labels(env):
+    state = env.get_state()
+    labels = state.labels
+    return labels
 
 def attention_window(frame, model, heatmap):
     with tf.GradientTape() as tape:
@@ -74,8 +86,8 @@ def attention_window(frame, model, heatmap):
             atten_map = np.expand_dims(atten_map, axis=0)
             return atten_map
 
-def attention_comp():
-    human = view_human(env)
+def attention_comp(state):
+    human = cv2.cvtColor(view_human(env), cv2.COLOR_RGB2BGR)
     attention = attention_window(state, model, False)
 
     mask = np.zeros_like(human)
@@ -83,7 +95,49 @@ def attention_comp():
     mask[:,:,1] = attention
     mask[:,:,2] = attention
 
-    return human * (mask / 255.0)
+    comp = human * (mask / 255.0)
+    return comp
+
+def feature_model(model):
+    out = model.layers[3].output
+    feature_model = tf.keras.Model(inputs = model.inputs, outputs = out)
+    return feature_model
+
+def witness(env, model, action_space):
+    info, prev_info, stack, state = sandbox.reset(env)
+
+    frame_count = 0
+
+    human_buf = []
+    state_buf = []
+    heatmap_buf = []
+    attention_buf = []
+
+    while not env.is_episode_finished():
+
+        human_buf.append(cv2.cvtColor(view_human(env), cv2.COLOR_RGB2BGR))
+        state_buf.append(view_machine(state))
+        heatmap_buf.append(attention_window(state, model, True))
+        attention_buf.append(attention_comp(state))
+
+        state_tensor = tf.convert_to_tensor(state)
+        state_tensor = tf.expand_dims(state_tensor, 0)
+        action_probs = model(state_tensor, training=False)
+        action = tf.argmax(action_probs[0]).numpy()
+
+        state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
+
+        prev_info = info
+        state = state_next
+        frame_count += 1
+
+        if terminal:
+            break
+
+    render_gif(human_buf, log_dir + "viz_human")
+    render_gif(state_buf, log_dir + "viz_state")
+    render_gif(heatmap_buf, log_dir + "viz_heatmap")
+    render_gif(attention_buf, log_dir + "viz_attention")
 
 # -----------------------------
 
@@ -97,7 +151,9 @@ model = load_model(log_dir)
 
 # -----------------------------
 
-cv2.imwrite('img_human.png', view_human(env))
-cv2.imwrite('img_state.png', view_machine(state))
-cv2.imwrite('img_heatmap.png', attention_window(state, model, True))
-cv2.imwrite('img_attention.png', attention_comp())
+witness(env, model, action_space)
+
+# cv2.imwrite('img_human.png', view_human(env))
+# cv2.imwrite('img_state.png', view_machine(state))
+# cv2.imwrite('img_heatmap.png', attention_window(state, model, True))
+# cv2.imwrite('img_attention.png', attention_comp())
