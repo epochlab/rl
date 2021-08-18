@@ -41,9 +41,9 @@ def view_human(env):
     return frame_RGB
 
 def view_slice(state, count):
-    frame = np.array(state) * 255.0
+    frame = np.array(state)
     slice = processed_frame = np.repeat(frame[:, :, count, np.newaxis], 3, axis=2)
-    slice = cv2.resize(slice, dim)
+    slice = cv2.resize(slice, dim) * 255.0
     return slice
 
 def feature_window(frame, model, heatmap):
@@ -62,15 +62,15 @@ def feature_window(frame, model, heatmap):
         atten_map = np.uint8(atten_map * 255.0)
 
         if heatmap:
-            heatmap = cv2.applyColorMap(atten_map, cv2.COLORMAP_JET)
+            heatmap = cv2.applyColorMap(atten_map, cv2.COLORMAP_TURBO)
             return heatmap
         else:
+            atten_map = np.expand_dims(atten_map, axis=0)
             return atten_map
 
 def attention_composite():
     human = view_human(env)
     attention = feature_window(state, model, False)
-    attention = np.expand_dims(attention, axis=0)
 
     mask = np.zeros_like(human)
     mask[:,:,0] = attention
@@ -96,7 +96,7 @@ slice = view_slice(state, 0)
 heatmap = feature_window(state, model, True)
 attention = attention_composite()
 
-cv2.imwrite('human.png', human)
-cv2.imwrite('slice.png', slice)
-cv2.imwrite('heatmap.png', heatmap)
-cv2.imwrite('attention.png', attention)
+cv2.imwrite('img_human.png', human)
+cv2.imwrite('img_slice.png', slice)
+cv2.imwrite('img_heatmap.png', heatmap)
+cv2.imwrite('img_attention.png', attention)
