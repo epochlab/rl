@@ -14,6 +14,13 @@ from utils import load_config, render_gif, load
 
 # -----------------------------
 
+physical_devices = tf.config.experimental.list_physical_devices("GPU")
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+print("GPU is", "available" if physical_devices else "NOT AVAILABLE")
+print("Eager mode:", tf.executing_eagerly())
+
+# -----------------------------
+
 config = load_config()['doom-ddqn']
 log_dir = 'metrics/20210816-233347/'
 
@@ -71,6 +78,15 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
+def plot_value(data, timestep):
+    v = np.array(data)
+    s = np.array(timestep)
+    fig, ax = plt.subplots()
+
+    ax.plot(s, v)
+    frame = np.array(plt.show())
+    return frame
+
 def intermediate_representation(state, model, layer_names=None):
     if isinstance(layer_names, list) or isinstance(layer_names, tuple):
         layers = [model.get_layer(name=layer_name).output for layer_name in layer_names]
@@ -84,7 +100,6 @@ def intermediate_representation(state, model, layer_names=None):
 def witness(env, action_space, model):
     print("Witnessing...")
     info, prev_info, stack, state = sandbox.reset(env)
-    frame_count = 0
 
     human_buf = []
     state_buf = []
@@ -92,6 +107,9 @@ def witness(env, action_space, model):
     attention_buf = []
 
     values = []
+    counter = []
+
+    frame_count = 0
 
     while not env.is_episode_finished():
 
@@ -103,7 +121,10 @@ def witness(env, action_space, model):
         q_val, action_prob = intermediate_representation(state, model, ['lambda', 'add'])
         print('Q Value:', q_val[0], 'Probabilities:', action_prob[0])
 
-        values.append(q_val)
+        values.append(float(q_val[0]))
+        counter.append(frame_count)
+
+        plot_value(values, counter)
 
         action = tf.argmax(action_prob[0]).numpy()
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
