@@ -40,11 +40,19 @@ def view_human(env):
     frame_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return frame_RGB
 
-def view_slice(state, count):
-    frame = np.array(state)
-    slice = processed_frame = np.repeat(frame[:, :, count, np.newaxis], 3, axis=2)
-    slice = cv2.resize(slice, dim) * 255.0
-    return slice
+# def view_slice(state, count):
+#     frame = np.array(state)
+#     slice = processed_frame = np.repeat(frame[:, :, count, np.newaxis], 3, axis=2)
+#     slice = cv2.resize(slice, dim) * 255.0
+#     return slice
+
+def view_state(state):
+    state = np.array(state) * 255.0
+
+    x0 = np.repeat(state[:, :, 0, np.newaxis], 3, axis=2)
+    x1 = np.repeat(state[:, :, 1, np.newaxis], 3, axis=2)
+    x2 = np.repeat(state[:, :, 2, np.newaxis], 3, axis=2)
+    x3 = np.repeat(state[:, :, 3, np.newaxis], 3, axis=2)
 
 def feature_window(frame, model, heatmap):
     with tf.GradientTape() as tape:
@@ -92,11 +100,9 @@ model = load_model(log_dir)
 # -----------------------------
 
 human = view_human(env)
-slice = view_slice(state, 0)
 heatmap = feature_window(state, model, True)
 attention = attention_composite()
 
 cv2.imwrite('img_human.png', human)
-cv2.imwrite('img_slice.png', slice)
 cv2.imwrite('img_heatmap.png', heatmap)
 cv2.imwrite('img_attention.png', attention)
