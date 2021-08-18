@@ -2,12 +2,13 @@
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
-from agent import Agent
 from wrappers.doom import Sandbox
+from agent import Agent
 from networks import dqn, dueling_dqn
 from utils import load_config, render_gif, load
 
@@ -22,9 +23,7 @@ dim = (640, 480)
 
 def filter_summary(model):
     for layer in model.layers:
-        if 'conv' in layer.name:
-            filters, biases = layer.get_weights()
-            print(layer.name, filters.shape)
+        print(layer.name)
 
 def view_machine(state, factor):
     state = np.array(state)
@@ -72,21 +71,15 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
-def intermediate_representation(state, model, layer_names=None, stack_state=True):
+def intermediate_representation(state, model, layer_names=None):
     if isinstance(layer_names, list) or isinstance(layer_names, tuple):
         layers = [model.get_layer(name=layer_name).output for layer_name in layer_names]
     else:
         layers = model.get_layer(name=layer_names).output
 
     temp_model = tf.keras.Model(model.inputs, layers)
-
-    # Stack state 4 times
-    if stack_state:
-        if len(state.shape) == 2:
-            state = state[:, :, np.newaxis]
-        state = np.repeat(state, config['window_length'], axis=2)
-
-    return temp_model.predict(state.reshape((-1, state.shape[0], state.shape[1], config['window_length'])))
+    prediction = temp_model.predict(state.reshape((-1, state.shape[0], state.shape[1], config['window_length'])))
+    return prediction
 
 def witness(env, action_space, model):
     print("Witnessing...")
@@ -102,15 +95,17 @@ def witness(env, action_space, model):
 
     while not env.is_episode_finished():
 
-        # human_buf.append(sandbox.view_human(env))
-        # state_buf.append(view_machine(state, 2))
-        # heatmap_buf.append(attention_window(state, model, True))
-        # attention_buf.append(attention_comp(state))
+        human_buf.append(sandbox.view_human(env))
+        state_buf.append(view_machine(state, 2))
+        heatmap_buf.append(attention_window(state, model, True))
+        attention_buf.append(attention_comp(state))
 
-        q_vals, value = intermediate_representation(state, model, ['add', 'dense'], stack_state=False)
-        values.append(value)
+        q_val, action_prob = intermediate_representation(state, model, ['lambda', 'add'])
+        print('Q Value:', q_val[0], 'Probabilities:', action_prob[0])
 
-        action = agent.get_action(state, model)
+        values.append(q_val)
+
+        action = tf.argmax(action_prob[0]).numpy()
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
 
         prev_info = info
@@ -120,10 +115,10 @@ def witness(env, action_space, model):
         if terminal:
             break
 
-    # render_gif(human_buf, log_dir + "viz_human")
-    # render_gif(state_buf, log_dir + "viz_state")
-    # render_gif(heatmap_buf, log_dir + "viz_heatmap")
-    # render_gif(attention_buf, log_dir + "viz_attention")
+    render_gif(human_buf, log_dir + "viz_human")
+    render_gif(state_buf, log_dir + "viz_state")
+    render_gif(heatmap_buf, log_dir + "viz_heatmap")
+    render_gif(attention_buf, log_dir + "viz_attention")
 
 # -----------------------------
 
