@@ -91,8 +91,23 @@ class Sandbox:
 
         return reward
 
-    def render(self, env):
+    def view_human(self, env):
         state = env.get_state()
         frame = state.screen_buffer
         frame = np.rollaxis(frame, 0, 3)
         return frame
+
+    def view_depth(self, env):
+        state = env.get_state()
+        depth = state.depth_buffer
+        return depth
+
+    def view_automap(self, env):
+        state = env.get_state()
+        automap = state.automap_buffer
+        return automap
+
+    def view_labels(self, env):
+        state = env.get_state()
+        labels = state.labels
+        return labels
