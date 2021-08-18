@@ -54,6 +54,7 @@ min_reward = 0
 
 # -----------------------------
 
+print("Training...")
 info, prev_info, stack, state = sandbox.reset(env)
 
 while not env.is_episode_finished():  # Run until solved
@@ -96,7 +97,7 @@ while not env.is_episode_finished():  # Run until solved
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if terminal and running_reward > (min_reward + 1):
-        save(config, model, model_target, log_dir + timestamp)
+        save(model, model_target, log_dir + timestamp)
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
@@ -107,6 +108,6 @@ while not env.is_episode_finished():  # Run until solved
 
     # Condition to consider the task solved (Pong = 21)
     if running_reward == 100:
-        save(config, model, model_target, log_dir + timestamp)
+        save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
