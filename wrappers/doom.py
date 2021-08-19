@@ -2,6 +2,7 @@
 
 import vizdoom
 import numpy as np
+import matplotlib.pyplot as plt
 
 import skimage
 from skimage import transform, color
@@ -18,13 +19,15 @@ class Sandbox:
         env = vizdoom.DoomGame()
         env.load_config(config_path)
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
-        env.set_window_visible(False)
+        env.set_window_visible(True)
         env.init()
         action_space = env.get_available_buttons_size()
         return env, action_space
 
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
+        frame = frame[:-80,:]
+        plt.imshow(frame)
         frame = skimage.color.rgb2gray(frame)
         frame = skimage.transform.resize(frame, size)
 
@@ -80,6 +83,8 @@ class Sandbox:
         return next_stack_state, reward, terminal, info
 
     def shape_reward(self, reward, info, prev_info):
+        reward = reward / 1000
+
         if (info[0] > prev_info[0]): # Kill count
             reward = reward + 1
 

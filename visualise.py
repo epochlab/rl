@@ -24,7 +24,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config()['doom-ddqn']
+config = load_config()['doom-defend_the_center']
 log_dir = 'metrics/20210816-233347/'
 
 dim = (640, 480)
@@ -125,7 +125,7 @@ def witness(env, action_space, model):
         heatmap, comp = attention_comp(state)
 
         human_buf.append(sandbox.view_human(env))
-        state_buf.append(view_machine(state, 2))
+        state_buf.append(view_machine(state, 5))
         heatmap_buf.append(heatmap)
         attention_buf.append(comp)
 
