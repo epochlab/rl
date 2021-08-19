@@ -27,13 +27,13 @@ class Sandbox:
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
         frame = frame[:-80,:]
-        plt.imshow(frame)
         frame = skimage.color.rgb2gray(frame)
         frame = skimage.transform.resize(frame, size)
 
         if self.GRADE:
             frame -= np.min(frame)
             frame *= (1/np.max(frame))
+
         return frame
 
     def framestack(self, stack, state, new_episode):
@@ -79,11 +79,11 @@ class Sandbox:
         next_frame = state.screen_buffer
         stack, next_stack_state = self.framestack(stack, next_frame, False)
         info = state.game_variables
-        reward = self.shape_reward(reward, info, prev_info)
+        reward = self.shape_reward(reward, 0.1, info, prev_info)
         return next_stack_state, reward, terminal, info
 
-    def shape_reward(self, reward, info, prev_info):
-        reward *= 0.1
+    def shape_reward(self, reward, factor, info, prev_info):
+        reward *= factor
 
         if (info[0] > prev_info[0]): # Kill count
             reward = reward + 1
