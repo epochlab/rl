@@ -18,7 +18,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config()['doom']
+config = load_config('config.yml')['doom']
 log_dir = "metrics/"
 
 # -----------------------------
@@ -41,7 +41,7 @@ else:
 
 # -----------------------------
 
-timestamp, summary_writer = log_feedback(model, log_dir)
+timestamp, summary_writer = log_feedback(log_dir)
 print("Job ID:", timestamp)
 
 frame_count = 0
@@ -85,7 +85,6 @@ while not env.is_episode_finished():  # Run until solved
         agent.fixed_target(frame_count, model, model_target)
     else:
         agent.soft_target(model_target.trainable_variables, model.trainable_variables)
-
 
     if not config['use_per']:
         memory.limit()                                                                                     # Limit memory cache to defined length
