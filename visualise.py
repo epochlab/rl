@@ -2,13 +2,13 @@
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from wrappers.doom import Sandbox
 from agent import Agent
