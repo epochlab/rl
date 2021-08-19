@@ -81,9 +81,9 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
-def plot_value(values, counter, frame_count):
-    s = np.array(counter)[-50:]
-    v = np.array(values)[-50:]
+def plot_value(values, counter, depth):
+    s = np.array(counter)[-depth:]
+    v = np.array(values)[-depth:]
 
     fig = Figure()
     canvas = FigureCanvas(fig)
@@ -91,12 +91,9 @@ def plot_value(values, counter, frame_count):
 
     ax.plot(s, v)
     ax.grid()
-    ax.margins(0)
-
     ax.set(xlabel='Time (s)', ylabel='Q-Value (V[s])', title='Temporal estimation of q-values.')
 
     fig.canvas.draw()
-
     frame = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
     frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return frame
@@ -128,10 +125,10 @@ def witness(env, action_space, model):
 
     while not env.is_episode_finished():
 
-        # human_buf.append(sandbox.view_human(env))
-        # state_buf.append(view_machine(state, 2))
-        # heatmap_buf.append(attention_window(state, model, True))
-        # attention_buf.append(attention_comp(state))
+        human_buf.append(sandbox.view_human(env))
+        state_buf.append(view_machine(state, 2))
+        heatmap_buf.append(attention_window(state, model, True))
+        attention_buf.append(attention_comp(state))
 
         q_val, action_prob = intermediate_representation(state, model, ['lambda', 'add'])
         print('Q Value:', q_val[0], 'Probabilities:', action_prob[0])
@@ -139,7 +136,7 @@ def witness(env, action_space, model):
         values.append(float(q_val[0]))
         counter.append(frame_count)
 
-        graph = plot_value(values, counter, frame_count)
+        graph = plot_value(values, counter, 50)
         graph_buf.append(graph)
 
         action = tf.argmax(action_prob[0]).numpy()
@@ -152,10 +149,10 @@ def witness(env, action_space, model):
         if terminal:
             break
 
-    # render_gif(human_buf, log_dir + "viz_human")
-    # render_gif(state_buf, log_dir + "viz_state")
-    # render_gif(heatmap_buf, log_dir + "viz_heatmap")
-    # render_gif(attention_buf, log_dir + "viz_attention")
+    render_gif(human_buf, log_dir + "viz_human")
+    render_gif(state_buf, log_dir + "viz_state")
+    render_gif(heatmap_buf, log_dir + "viz_heatmap")
+    render_gif(attention_buf, log_dir + "viz_attention")
     render_gif(graph_buf, log_dir + "viz_graph")
 
 # -----------------------------
