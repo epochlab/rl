@@ -23,7 +23,7 @@ def doom_search():
 
     action_space = env.get_available_buttons_size()
     action_history = []
-    FPS = 1
+    FPS = 4
 
     env.new_episode()
     while not env.is_episode_finished():
