@@ -79,7 +79,7 @@ class Sandbox:
         next_frame = state.screen_buffer
         stack, next_stack_state = self.framestack(stack, next_frame, False)
         info = state.game_variables
-        reward = self.shape_reward(reward, 0.1, info, prev_info)
+        reward = self.shape_reward(reward, 0.001, info, prev_info)
         return next_stack_state, reward, terminal, info
 
     def shape_reward(self, reward, factor, info, prev_info):
