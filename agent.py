@@ -82,17 +82,17 @@ class Agent:
                 td_error = abs(q_action - q_samp) + 0.1
                 memory.update(indices, td_error)
 
-    def static_target(self, frame_count, model, model_target):
+    def fixed_target(self, frame_count, model, model_target):
         if frame_count % self.UPDATE_TARGET_NETWORK == 0:
             model_target.set_weights(model.get_weights())
 
-    def fixed_q(self, target_weights, weights):
+    def soft_target(self, target_weights, weights):
         for (a, b) in zip(target_weights, weights):
             a.assign(b * self.TAU + a * (1 - self.TAU))
 
     def td_error(self, model, model_target, action, state, state_next, reward, terminal):
-        state_next = tf.expand_dims(state_next, 0)
         state = tf.expand_dims(state, 0)
+        state_next = tf.expand_dims(state_next, 0)
 
         q = model.predict(state_next)[0]
         target_q = model_target.predict(state_next)
@@ -104,23 +104,20 @@ class Agent:
         else:
             q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)      # Bellman Equation
 
-        # arg_max_q = np.argmax(q)
-        # q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)
         q_samp = q_samp * (1 - terminal) - terminal
         masks = tf.one_hot(action, self.ACTION_SPACE)
 
         q_values = model(state)
         q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
 
-        error = abs(q_action - q_samp) + 0.1
-        return error
+        td_error = abs(q_action - q_samp) + 0.1
+        return td_error
 
     def evaluate(self, model, log_dir, episode_id):
         info, prev_info, stack, state = self.SANDBOX.reset(self.ENV)
 
-        episode_reward = 0
-        frame_count = 0
         frames = []
+        episode_reward = 0
 
         while not self.ENV.is_episode_finished():
             frames = capture(self.ENV, self.SANDBOX, frames)                                                                        # Capture gameplay experience
@@ -131,7 +128,6 @@ class Agent:
 
             prev_info = info
             state = state_next
-            frame_count += 1
 
             if terminal:
                 break

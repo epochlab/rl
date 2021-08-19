@@ -18,7 +18,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config()['doom-deadly_corridor']
+config = load_config()['doom']
 log_dir = "metrics/"
 
 # -----------------------------
@@ -81,10 +81,11 @@ while not env.is_episode_finished():  # Run until solved
 
     agent.learn(frame_count, memory, model, model_target, optimizer)                                       # Learn every fourth frame and once batch size is over 32
 
-    if config['fixed_q']:                                                                                  # Update the the target network with new weights
-        agent.fixed_q(model_target.trainable_variables, model.trainable_variables)
+    if config['fixed']:                                                                                    # Update the the target network with new weights
+        agent.fixed_target(frame_count, model, model_target)
     else:
-        agent.static_target(frame_count, model, model_target)
+        agent.soft_target(model_target.trainable_variables, model.trainable_variables)
+
 
     if not config['use_per']:
         memory.limit()                                                                                     # Limit memory cache to defined length
@@ -107,7 +108,7 @@ while not env.is_episode_finished():  # Run until solved
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
 
     # Condition to consider the task solved
-    if running_reward == 100:
+    if running_reward == 2500:                                                  # Pong: 21 | Breakdout: 40 | Doom (Defend the Center): 100 | Doom (Deadly Corridor): 2500
         save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
