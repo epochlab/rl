@@ -106,7 +106,7 @@ while not env.is_episode_finished():  # Run until solved
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
 
-    # Condition to consider the task solved (Pong = 21)
+    # Condition to consider the task solved
     if running_reward == 100:
         save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
