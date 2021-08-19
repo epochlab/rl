@@ -78,13 +78,18 @@ def attention_comp(state):
     comp = human * (mask / 255.0)
     return comp
 
-def plot_value(data, timestep):
-    v = np.array(data)
-    s = np.array(timestep)
+def plot_value(values, counter):
+    s = np.array(counter)
+    v = np.array(values)
     fig, ax = plt.subplots()
+    fig.canvas.draw()
 
     ax.plot(s, v)
-    frame = np.array(plt.show())
+    ax.set(xlabel='Timestep (s)', ylabel='Q-Value (V[s])',
+    title='Temporal estimation of Q-value')
+    ax.grid()
+    frame = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+    frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return frame
 
 def intermediate_representation(state, model, layer_names=None):
@@ -105,6 +110,7 @@ def witness(env, action_space, model):
     state_buf = []
     heatmap_buf = []
     attention_buf = []
+    graph_buf = []
 
     values = []
     counter = []
@@ -124,7 +130,8 @@ def witness(env, action_space, model):
         values.append(float(q_val[0]))
         counter.append(frame_count)
 
-        plot_value(values, counter)
+        graph = plot_value(values, counter)
+        graph_buf.append(graph)
 
         action = tf.argmax(action_prob[0]).numpy()
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
@@ -140,6 +147,7 @@ def witness(env, action_space, model):
     render_gif(state_buf, log_dir + "viz_state")
     render_gif(heatmap_buf, log_dir + "viz_heatmap")
     render_gif(attention_buf, log_dir + "viz_attention")
+    render_gif(graph_buf, log_dir + "viz_graph")
 
 # -----------------------------
 
