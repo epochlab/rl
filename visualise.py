@@ -125,7 +125,7 @@ def witness(env, action_space, model):
         heatmap, comp = attention_comp(state)
 
         human_buf.append(sandbox.view_human(env))
-        state_buf.append(view_machine(state, 5))
+        state_buf.append(view_machine(state, 2))
         heatmap_buf.append(heatmap)
         attention_buf.append(comp)
 
