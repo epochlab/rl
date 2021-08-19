@@ -3,7 +3,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import backend as K
-from tensorflow.keras.layers import LSTM, TimeDistributed
 
 def dqn(input_shape, window_length, action_space):
     inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length,))
