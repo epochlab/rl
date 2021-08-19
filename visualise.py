@@ -35,6 +35,16 @@ def filter_summary(model):
     for layer in model.layers:
         print(layer.name)
 
+def intermediate_representation(state, model, layer_names=None):
+    if isinstance(layer_names, list) or isinstance(layer_names, tuple):
+        layers = [model.get_layer(name=layer_name).output for layer_name in layer_names]
+    else:
+        layers = model.get_layer(name=layer_names).output
+
+    temp_model = tf.keras.Model(model.inputs, layers)
+    prediction = temp_model.predict(state[np.newaxis, :, :, :])
+    return prediction
+
 def view_machine(state, factor):
     state = np.array(state)
     state = cv2.resize(state, (state.shape[0]*factor, state.shape[1]*factor))
@@ -47,7 +57,7 @@ def view_machine(state, factor):
     grid = np.concatenate((x0, x1, x2, x3), axis=1) * 255.0
     return grid
 
-def attention_window(frame, model, heatmap):
+def attention_window(frame, model):
     with tf.GradientTape() as tape:
         conv_layer = model.get_layer('conv2d')
         iterate = tf.keras.models.Model([model.inputs], [model.output, conv_layer.output])
@@ -61,25 +71,22 @@ def attention_window(frame, model, heatmap):
         atten_map = atten_map.reshape((20, 20))
         atten_map = cv2.resize(atten_map, dim, interpolation=cv2.INTER_AREA)
         atten_map = np.uint8(atten_map * 255.0)
-
-        if heatmap:
-            atten_map = cv2.applyColorMap(atten_map, cv2.COLORMAP_TURBO)
-        else:
-            atten_map = np.expand_dims(atten_map, axis=0)
-
+        atten_map = np.expand_dims(atten_map, axis=0)
         return atten_map
 
 def attention_comp(state):
     human = sandbox.view_human(env)
-    attention = attention_window(state, model, False)
+    attention = attention_window(state, model)
 
     mask = np.zeros_like(human)
     mask[:,:,0] = attention
     mask[:,:,1] = attention
     mask[:,:,2] = attention
 
+    heatmap = cv2.applyColorMap(mask, cv2.COLORMAP_TURBO)
+
     comp = human * (mask / 255.0)
-    return comp
+    return heatmap, comp
 
 def plot_value(values, counter, depth):
     s = np.array(counter)[-depth:]
@@ -98,16 +105,6 @@ def plot_value(values, counter, depth):
     frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return frame
 
-def intermediate_representation(state, model, layer_names=None):
-    if isinstance(layer_names, list) or isinstance(layer_names, tuple):
-        layers = [model.get_layer(name=layer_name).output for layer_name in layer_names]
-    else:
-        layers = model.get_layer(name=layer_names).output
-
-    temp_model = tf.keras.Model(model.inputs, layers)
-    prediction = temp_model.predict(state.reshape((-1, state.shape[0], state.shape[1], config['window_length'])))
-    return prediction
-
 def witness(env, action_space, model):
     print("Witnessing...")
     info, prev_info, stack, state = sandbox.reset(env)
@@ -125,10 +122,12 @@ def witness(env, action_space, model):
 
     while not env.is_episode_finished():
 
+        heatmap, comp = attention_comp(state)
+
         human_buf.append(sandbox.view_human(env))
         state_buf.append(view_machine(state, 2))
-        heatmap_buf.append(attention_window(state, model, True))
-        attention_buf.append(attention_comp(state))
+        heatmap_buf.append(heatmap)
+        attention_buf.append(comp)
 
         q_val, action_prob = intermediate_representation(state, model, ['lambda', 'add'])
         print('Q Value:', q_val[0], 'Probabilities:', action_prob[0])
