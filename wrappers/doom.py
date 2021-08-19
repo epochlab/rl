@@ -83,7 +83,7 @@ class Sandbox:
         return next_stack_state, reward, terminal, info
 
     def shape_reward(self, reward, info, prev_info):
-        reward = reward / 1000
+        reward *= 0.1
 
         if (info[0] > prev_info[0]): # Kill count
             reward = reward + 1
