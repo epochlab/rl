@@ -18,7 +18,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['doom']
+config = load_config('config.yml')['doom-dqn']
 log_dir = "metrics/"
 
 # -----------------------------
@@ -96,7 +96,7 @@ while not env.is_episode_finished():  # Run until solved
     running_reward = np.mean(episode_reward_history)
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    if terminal and running_reward > (min_reward + 1):
+    if terminal and running_reward > (min_reward + 0.1):
         save(model, model_target, log_dir + timestamp)
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
@@ -107,7 +107,7 @@ while not env.is_episode_finished():  # Run until solved
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
 
     # Condition to consider the task solved
-    if running_reward == 2500:                                                  # Pong: 21 | Breakdout: 40 | Doom (Defend the Center): 100 | Doom (Deadly Corridor): 2500
+    if running_reward == 25:                                                    # Pong: 21 | Breakdout: 40 | Doom (Defend the Center): 100 | Doom (Deadly Corridor): 2500
         save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break

@@ -1,5 +1,5 @@
 ---
-  doom:
+  doom-dqn:
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/deadly_corridor.cfg"
 
     input_shape: [84, 84]
