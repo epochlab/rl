@@ -24,8 +24,8 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['doom']
-log_dir = 'metrics/20210819-225104/'
+config = load_config('config.yml')['doom-dqn']
+log_dir = 'metrics/20210820-214458/'
 
 dim = (640, 480)
 
@@ -114,7 +114,6 @@ def witness(env, action_space, model):
     state_buf = []
     depth_buf = []
     automap_buf = []
-    labels_buf = []
 
     heatmap_buf = []
     attention_buf = []
@@ -129,21 +128,21 @@ def witness(env, action_space, model):
         state_buf.append(view_machine(state, 2))
         depth_buf.append(sandbox.view_depth(env))
         automap_buf.append(sandbox.view_automap(env))
-        # labels = sandbox.view_labels(env)
 
         heatmap, comp = attention_comp(state)
         heatmap_buf.append(heatmap)
         attention_buf.append(comp)
 
         q_val, action_prob = intermediate_representation(state, model, ['lambda', 'add'])
-        print('Q Value:', q_val[0], 'Probabilities:', action_prob[0])
+        action = tf.argmax(action_prob[0]).numpy()
+
+        print('Frame:', frame_count, '| Q Value:', q_val[0], '| Action:', action)
 
         values.append(float(q_val[0]))
         counter.append(frame_count)
         graph = plot_value(values, counter, 50)
         graph_buf.append(graph)
 
-        action = tf.argmax(action_prob[0]).numpy()
         state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
 
         prev_info = info
@@ -157,7 +156,6 @@ def witness(env, action_space, model):
     render_gif(state_buf, log_dir + "viz_state")
     render_gif(depth_buf, log_dir + "viz_depth")
     render_gif(automap_buf, log_dir + "viz_automap")
-    # render_gif(labels_buf, log_dir + "viz_class")
 
     render_gif(heatmap_buf, log_dir + "viz_heatmap")
     render_gif(attention_buf, log_dir + "viz_attention")

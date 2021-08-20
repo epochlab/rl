@@ -21,6 +21,7 @@ class Sandbox:
 
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
         env.set_window_visible(True)
+        env.set_render_hud(False)
 
         if AOV:
             env.set_depth_buffer_enabled(True)
@@ -43,7 +44,6 @@ class Sandbox:
 
     def preprocess(self, frame, size):
         frame = np.rollaxis(frame, 0, 3)
-        frame = frame[:-80,:]
         frame = skimage.color.rgb2gray(frame)
         frame = skimage.transform.resize(frame, size)
 
