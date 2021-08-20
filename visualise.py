@@ -25,7 +25,7 @@ print("Eager mode:", tf.executing_eagerly())
 # -----------------------------
 
 config = load_config('config.yml')['doom-dqn']
-log_dir = 'metrics/20210820-214458/'
+log_dir = 'metrics/20210820-222647/'
 
 dim = (640, 480)
 
@@ -106,7 +106,7 @@ def plot_value(values, counter, depth):
     return frame
 
 def witness(env, action_space, model):
-    print("Witnessing...")
+    print("Witnessing...", log_dir)
     info, prev_info, stack, state = sandbox.reset(env)
     frame_count = 0
 
@@ -136,7 +136,7 @@ def witness(env, action_space, model):
         q_val, action_prob = intermediate_representation(state, model, ['lambda', 'add'])
         action = tf.argmax(action_prob[0]).numpy()
 
-        print('Frame:', frame_count, '| Q Value:', q_val[0], '| Action:', action)
+        print("Frame:", frame_count, "| Q Value:", q_val[0], "| Action:", action)
 
         values.append(float(q_val[0]))
         counter.append(frame_count)
@@ -152,14 +152,14 @@ def witness(env, action_space, model):
         if terminal:
             break
 
-    render_gif(human_buf, log_dir + "viz_human")
-    render_gif(state_buf, log_dir + "viz_state")
-    render_gif(depth_buf, log_dir + "viz_depth")
-    render_gif(automap_buf, log_dir + "viz_automap")
+    render_gif(human_buf, log_dir + 'viz_human')
+    render_gif(state_buf, log_dir + 'viz_state')
+    render_gif(depth_buf, log_dir + 'viz_depth')
+    render_gif(automap_buf, log_dir + 'viz_automap')
 
-    render_gif(heatmap_buf, log_dir + "viz_heatmap")
-    render_gif(attention_buf, log_dir + "viz_attention")
-    render_gif(graph_buf, log_dir + "viz_graph")
+    render_gif(heatmap_buf, log_dir + 'viz_heatmap')
+    render_gif(attention_buf, log_dir + 'viz_attention')
+    render_gif(graph_buf, log_dir + 'viz_graph')
 
 # -----------------------------
 

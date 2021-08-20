@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import time
 import numpy as np
 import tensorflow as tf
 
@@ -69,15 +70,15 @@ while not env.is_episode_finished():  # Run until solved
     else:
         memory.push(action, state, state_next, reward, terminal)                                            # Save actions and states to ExperienceReplayMemory
 
-    prev_info = info
-    state = state_next
-    frame_count += 1
-
     if terminal:
         episode_reward = 0
         episode_count += 1
     else:
         episode_reward += reward
+
+    prev_info = info
+    state = state_next
+    frame_count += 1
 
     agent.learn(frame_count, memory, model, model_target, optimizer)                                       # Learn every fourth frame and once batch size is over 32
 
@@ -96,7 +97,7 @@ while not env.is_episode_finished():  # Run until solved
     running_reward = np.mean(episode_reward_history)
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    if terminal and running_reward > (min_reward + 0.1):
+    if terminal and running_reward > (min_reward + 0.25):
         save(model, model_target, log_dir + timestamp)
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
