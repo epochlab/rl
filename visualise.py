@@ -24,8 +24,8 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config()['doom-defend_the_center']
-log_dir = 'metrics/20210816-233347/'
+config = load_config('config.yml')['doom']
+log_dir = 'metrics/20210819-225104/'
 
 dim = (640, 480)
 
@@ -108,24 +108,30 @@ def plot_value(values, counter, depth):
 def witness(env, action_space, model):
     print("Witnessing...")
     info, prev_info, stack, state = sandbox.reset(env)
+    frame_count = 0
 
     human_buf = []
     state_buf = []
+    depth_buf = []
+    automap_buf = []
+    labels_buf = []
+
     heatmap_buf = []
     attention_buf = []
-    graph_buf = []
 
+    graph_buf = []
     values = []
     counter = []
 
-    frame_count = 0
-
     while not env.is_episode_finished():
-
-        heatmap, comp = attention_comp(state)
 
         human_buf.append(sandbox.view_human(env))
         state_buf.append(view_machine(state, 2))
+        depth_buf.append(sandbox.view_depth(env))
+        automap_buf.append(sandbox.view_automap(env))
+        # labels = sandbox.view_labels(env)
+
+        heatmap, comp = attention_comp(state)
         heatmap_buf.append(heatmap)
         attention_buf.append(comp)
 
@@ -134,7 +140,6 @@ def witness(env, action_space, model):
 
         values.append(float(q_val[0]))
         counter.append(frame_count)
-
         graph = plot_value(values, counter, 50)
         graph_buf.append(graph)
 
@@ -150,6 +155,10 @@ def witness(env, action_space, model):
 
     render_gif(human_buf, log_dir + "viz_human")
     render_gif(state_buf, log_dir + "viz_state")
+    render_gif(depth_buf, log_dir + "viz_depth")
+    render_gif(automap_buf, log_dir + "viz_automap")
+    # render_gif(labels_buf, log_dir + "viz_class")
+
     render_gif(heatmap_buf, log_dir + "viz_heatmap")
     render_gif(attention_buf, log_dir + "viz_attention")
     render_gif(graph_buf, log_dir + "viz_graph")
@@ -158,7 +167,7 @@ def witness(env, action_space, model):
 
 sandbox = Sandbox(config)
 
-env, action_space = sandbox.build_env(config['env_name'])
+env, action_space = sandbox.build_env(config['env_name'], True)
 info, prev_info, stack, state = sandbox.reset(env)
 
 agent = Agent(config, sandbox, env, action_space)

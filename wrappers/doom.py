@@ -15,11 +15,28 @@ class Sandbox:
         self.FPS = config['fps']
         self.GRADE = config['grade']
 
-    def build_env(self, config_path):
+    def build_env(self, config_path, AOV=False):
         env = vizdoom.DoomGame()
         env.load_config(config_path)
+
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
         env.set_window_visible(True)
+
+        if AOV:
+            env.set_depth_buffer_enabled(True)
+            env.set_labels_buffer_enabled(True)
+
+            env.set_automap_buffer_enabled(True)
+            env.set_automap_mode(vizdoom.AutomapMode.OBJECTS_WITH_SIZE)
+            env.set_automap_rotate(False)
+
+            env.add_available_game_variable(vizdoom.GameVariable.POSITION_X)
+            env.add_available_game_variable(vizdoom.GameVariable.POSITION_Y)
+            env.add_available_game_variable(vizdoom.GameVariable.POSITION_Z)
+
+            env.add_game_args("+am_followplayer 1")
+            env.add_game_args("+am_backcolor 000000")
+
         env.init()
         action_space = env.get_available_buttons_size()
         return env, action_space
@@ -110,6 +127,7 @@ class Sandbox:
     def view_automap(self, env):
         state = env.get_state()
         automap = state.automap_buffer
+        automap = np.rollaxis(automap, 0, 3)
         return automap
 
     def view_labels(self, env):
