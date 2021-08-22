@@ -25,7 +25,7 @@ print("Eager mode:", tf.executing_eagerly())
 # -----------------------------
 
 config = load_config('config.yml')['doom-dqn']
-log_dir = 'metrics/20210820-222647/'
+log_dir = 'metrics/20210821-025324/'
 
 dim = (640, 480)
 
