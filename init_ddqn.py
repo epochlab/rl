@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import time
 import numpy as np
 import tensorflow as tf
 
@@ -48,10 +47,15 @@ print("Job ID:", timestamp)
 frame_count = 0
 episode_count = 0
 
+loss = 0
+
 episode_reward_history = []
 episode_reward = 0
 eval_reward = 0
 min_reward = 0
+
+life = 0
+max_life = 0
 
 # -----------------------------
 
@@ -73,14 +77,19 @@ while not env.is_episode_finished():  # Run until solved
     if terminal:
         episode_reward = 0
         episode_count += 1
+
+        max_life = max(life, max_life)
+        life = 0
     else:
         episode_reward += reward
+        life += 1
 
     prev_info = info
     state = state_next
     frame_count += 1
 
-    agent.learn(frame_count, memory, model, model_target, optimizer)                                       # Learn every fourth frame and once batch size is over 32
+    if frame_count % config['update_after_actions'] == 0 and frame_count > config['batch_size']:           # Learn every fourth frame and once batch size is over 32
+        loss = agent.learn(memory, model, model_target, optimizer)
 
     if config['fixed']:                                                                                    # Update the the target network with new weights
         agent.fixed_target(frame_count, model, model_target)
@@ -99,16 +108,23 @@ while not env.is_episode_finished():  # Run until solved
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if terminal and running_reward > (min_reward + 0.25):
         save(model, model_target, log_dir + timestamp)
-        eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
+
+        eval_reward_history = []
+        for i in range(3):
+            _reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
+            eval_reward_history.append(_reward)
+        eval_reward = np.mean(eval_reward_history)
 
     # Feedback
     with summary_writer.as_default():
+        tf.summary.scalar('loss', loss, step=episode_count)
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
+        tf.summary.scalar('max_life', max_life, step=episode_count)
 
-    # Condition to consider the task solved
-    if running_reward == 25:                                                    # Pong: 21 | Breakdout: 40 | Doom (Defend the Center): 100 | Doom (Deadly Corridor): 2500
+    # # Condition to consider the task solved
+    if running_reward == 25:                                                    # Pong: 21 | Breakdout: 40 | Doom (Defend the Center): 100 | Doom (Deadly Corridor): 25
         save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break

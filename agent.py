@@ -20,7 +20,6 @@ class Agent:
         self.EPSILON_ANNEALER = (config['epsilon_max'] - config['epsilon_min'])
 
         self.BATCH_SIZE = config['batch_size']
-        self.UPDATE_AFTER_ACTIONS = config['update_after_actions']
         self.GAMMA = config['gamma']
         self.UPDATE_TARGET_NETWORK = config['update_target_network']
         self.TAU = config['tau']
@@ -45,42 +44,43 @@ class Agent:
         self.EPSILON = max(self.EPSILON, self.EPSILON_MIN)
         return action_idx
 
-    def learn(self, frame_count, memory, model, model_target, optimizer):
-        if frame_count % self.UPDATE_AFTER_ACTIONS == 0 and frame_count > self.BATCH_SIZE:
-            # Sample from replay buffer
-            if self.USE_PER:
-                samples, indices, priorities = memory.sample(self.BATCH_SIZE)
-                action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = samples
-            else:
-                action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = memory.sample()
+    def learn(self, memory, model, model_target, optimizer):
+        # Sample from replay buffer
+        if self.USE_PER:
+            samples, indices, priorities = memory.sample(self.BATCH_SIZE)
+            action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = samples
+        else:
+            action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = memory.sample()
 
-            # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
-            q = model.predict(state_next_sample)
-            target_q = model_target.predict(state_next_sample)
+        # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
+        q = model.predict(state_next_sample)
+        target_q = model_target.predict(state_next_sample)
 
-            # Build the updated Q-values for the sampled future states - DQN / DDQN
-            if self.DOUBLE:
-                max_q = tf.argmax(q, axis=1)
-                max_actions = tf.one_hot(max_q, self.ACTION_SPACE)
-                q_samp = reward_sample + self.GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
-            else:
-                q_samp = reward_sample + self.GAMMA * tf.reduce_max(target_q, axis=1)      # Bellman Equation
+        # Build the updated Q-values for the sampled future states - DQN / DDQN
+        if self.DOUBLE:
+            max_q = tf.argmax(q, axis=1)
+            max_actions = tf.one_hot(max_q, self.ACTION_SPACE)
+            q_samp = reward_sample + self.GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
+        else:
+            q_samp = reward_sample + self.GAMMA * tf.reduce_max(target_q, axis=1)      # Bellman Equation
 
-            q_samp = q_samp * (1 - terminal_sample) - terminal_sample                       # If final frame set the last value to -1
-            masks = tf.one_hot(action_sample, self.ACTION_SPACE)                            # Create a mask so we only calculate loss on the updated Q-values
+        q_samp = q_samp * (1 - terminal_sample) - terminal_sample                       # If final frame set the last value to -1
+        masks = tf.one_hot(action_sample, self.ACTION_SPACE)                            # Create a mask so we only calculate loss on the updated Q-values
 
-            with tf.GradientTape() as tape:
-                q_values = model(state_sample)                                              # Train the model on the states and updated Q-values
-                q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)              # Apply the masks to the Q-values to get the Q-value for action taken
-                loss = tf.keras.losses.Huber()(q_samp, q_action)                            # Calculate loss between new Q-value and old Q-value
+        with tf.GradientTape() as tape:
+            q_values = model(state_sample)                                              # Train the model on the states and updated Q-values
+            q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)              # Apply the masks to the Q-values to get the Q-value for action taken
+            loss = tf.keras.losses.Huber()(q_samp, q_action)                            # Calculate loss between new Q-value and old Q-value
 
-            # Backpropagation
-            grads = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(grads, model.trainable_variables))
+        # Backpropagation
+        grads = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
-            if self.USE_PER:
-                td_error = abs(q_action - q_samp) + 0.1
-                memory.update(indices, td_error)
+        if self.USE_PER:
+            td_error = abs(q_action - q_samp) + 0.1
+            memory.update(indices, td_error)
+
+        return float(loss)
 
     def fixed_target(self, frame_count, model, model_target):
         if frame_count % self.UPDATE_TARGET_NETWORK == 0:
