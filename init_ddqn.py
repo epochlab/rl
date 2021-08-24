@@ -106,15 +106,10 @@ while not env.is_episode_finished():  # Run until solved
     running_reward = np.mean(episode_reward_history)
 
     # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
-    if terminal and running_reward > (min_reward + 0.25):
+    if terminal and running_reward > (min_reward + 0.1):
         save(model, model_target, log_dir + timestamp)
+        eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
-
-        eval_reward_history = []
-        for i in range(3):
-            _reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
-            eval_reward_history.append(_reward)
-        eval_reward = np.mean(eval_reward_history)
 
     # Feedback
     with summary_writer.as_default():
