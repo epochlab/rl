@@ -58,5 +58,22 @@ max_life = 0
 print("Training...")
 info, prev_info, stack, state = sandbox.reset(env)
 
-action, policy = agent.get_action(state, actor)
-state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
+while not env.is_episode_finished():  # Run until solved
+    action, policy = agent.get_action(state, actor)
+    state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
+
+    agent.push(action, state, reward)
+
+    if terminal:
+        episode_reward = 0
+        episode_count += 1
+
+        max_life = max(life, max_life)
+        life = 0
+    else:
+        episode_reward += reward
+        life += 1
+
+    prev_info = info
+    state = state_next
+    frame_count += 1

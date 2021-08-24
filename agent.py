@@ -141,8 +141,17 @@ class A2CAgent:
         self.ENV = env
         self.ACTION_SPACE = action_space
 
+        self.state_history = []
+        self.reward_history = []
+        self.action_history = []
+
     def get_action(self, state, model):
         state = tf.expand_dims(state, 0)
         policy = model.predict(state).flatten()
         action = np.random.choice(self.ACTION_SPACE, 1, p=policy)[0]
         return action, policy
+
+    def push(self, action, state, reward):
+        self.action_history.append(action)
+        self.state_history.append(state)
+        self.reward_history.append(reward)
