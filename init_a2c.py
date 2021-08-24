@@ -29,5 +29,3 @@ actor = actor_network(config['input_shape'], config['window_length'], action_spa
 critic = critic_network(config['input_shape'], config['window_length'], value_space)
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
-
-actor.summary()

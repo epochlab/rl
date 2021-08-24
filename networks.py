@@ -75,7 +75,7 @@ def actor_network(input_shape, window_length, action_space):
     action = layers.Dense(action_space, activation='softmax')(layer6)
 
     model = keras.Model(inputs=inputs, outputs=action)
-    model = model.compile(loss='categorical_crossentropy')
+    model.compile(loss='categorical_crossentropy')
     return model
 
 def critic_network(input_shape, window_length, value_space):
