@@ -14,13 +14,14 @@ class Sandbox:
         self.WINDOW_LENGTH = config['window_length']
         self.FPS = config['fps']
         self.GRADE = config['grade']
+        self.VISIBLE = config['visible']
 
     def build_env(self, config_path, AOV=False):
         env = vizdoom.DoomGame()
         env.load_config(config_path)
 
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
-        env.set_window_visible(False)
+        env.set_window_visible(self.VISIBLE)
         env.set_render_hud(False)
 
         if AOV:
