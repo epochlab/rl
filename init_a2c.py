@@ -78,5 +78,16 @@ while not env.is_episode_finished():  # Run until solved
     state = state_next
     frame_count += 1
 
-    if frame_count > config['update_after_actions']:
-        agent.learn(actor, critic, action_space)
+    if terminal and frame_count > config['update_after_actions']:
+        loss = agent.learn(actor, critic, action_space)
+
+    episode_reward_history.append(episode_reward)
+    if len(episode_reward_history) > 100:
+        del episode_reward_history[:1]
+    running_reward = np.mean(episode_reward_history)
+
+    # Feedback
+    with summary_writer.as_default():
+        tf.summary.scalar('loss', loss, step=episode_count)
+        tf.summary.scalar('running_reward', running_reward, step=episode_count)
+        tf.summary.scalar('max_life', max_life, step=episode_count)
