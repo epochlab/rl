@@ -20,7 +20,7 @@ class Sandbox:
         env.load_config(config_path)
 
         env.set_screen_resolution(vizdoom.ScreenResolution.RES_640X480)
-        env.set_window_visible(True)
+        env.set_window_visible(False)
         env.set_render_hud(False)
 
         if AOV:

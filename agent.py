@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from utils import capture, render_gif
 
-class Agent:
+class DQNAgent:
     def __init__(self, config, sandbox, env, action_space):
         self.SANDBOX = sandbox
         self.ENV = env
@@ -134,3 +134,15 @@ class Agent:
 
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
+
+class A2CAgent:
+    def __init__(self, config, sandbox, env, action_space):
+        self.SANDBOX = sandbox
+        self.ENV = env
+        self.ACTION_SPACE = action_space
+
+    def get_action(self, state, model):
+        state = tf.expand_dims(state, 0)
+        policy = model.predict(state).flatten()
+        action = np.random.choice(self.ACTION_SPACE, 1, p=policy)[0]
+        return action, policy
