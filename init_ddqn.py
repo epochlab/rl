@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from wrappers.doom import Sandbox
-from agent import Agent
+from agent import DQNAgent
 from memory import ExperienceReplayMemory, PrioritizedReplayMemory
 from networks import dqn, dueling_dqn
 from utils import load_config, log_feedback, save, load
@@ -32,7 +32,7 @@ model.summary()
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
-agent = Agent(config, sandbox, env, action_space)
+agent = DQNAgent(config, sandbox, env, action_space)
 
 if config['use_per']:
     memory = PrioritizedReplayMemory(config)
