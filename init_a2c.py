@@ -77,3 +77,6 @@ while not env.is_episode_finished():  # Run until solved
     prev_info = info
     state = state_next
     frame_count += 1
+
+    if frame_count > config['update_after_actions']:
+        agent.learn(actor, critic, action_space)

@@ -141,6 +141,9 @@ class A2CAgent:
         self.ENV = env
         self.ACTION_SPACE = action_space
 
+        self.GAMMA = config['gamma']
+        self.STATE_SIZE = (config['input_shape'][0], config['input_shape'][1], config['window_length'])
+
         self.state_history = []
         self.reward_history = []
         self.action_history = []
@@ -155,3 +158,43 @@ class A2CAgent:
         self.action_history.append(action)
         self.state_history.append(state)
         self.reward_history.append(reward)
+
+    def discounted_rewards(self, rewards):
+        discounted_rewards = np.zeros_like(rewards)
+
+        running_add = 0
+        for t in reversed(range(0, len(rewards))):
+            if rewards[t] != 0:
+                running_add = 0
+            running_add = running_add * self.GAMMA + rewards[t]
+            discounted_rewards[t] = running_add
+
+        return discounted_rewards
+
+    def learn(self, actor, critic, action_space):
+        episode_length = len(self.state_history)
+
+        discounted_rewards = self.discounted_rewards(self.reward_history)
+        discounted_rewards -= np.mean(discounted_rewards)
+
+        if np.std(discounted_rewards):
+            discounted_rewards /= np.std(discounted_rewards)
+        else:
+            return 0
+
+        update_inputs = np.zeros(((episode_length,) + self.STATE_SIZE)) # Episode_lengthx64x64x4
+        for i in range(episode_length):
+            update_inputs[i,:,:,:] = self.state_history[i]
+
+        values = critic.predict(update_inputs)
+
+        advantages = np.zeros((episode_length, action_space))
+        for i in range(episode_length):
+            advantages[i][self.action_history[i]] = discounted_rewards[i] - values[i]
+
+        actor_loss = actor.fit(update_inputs, advantages, epochs=1, verbose=0)
+        critic_loss = critic.fit(update_inputs, discounted_rewards, epochs=1, verbose=0)
+
+        self.action_history, self.state_history, self.reward_history = [], [], []
+
+        return actor_loss.history['loss'], critic_loss.history['loss']
