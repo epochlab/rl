@@ -1,7 +1,7 @@
 ---
   doom-dqn:
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/deadly_corridor.cfg"
-    visible: True
+    visible: False
 
     input_shape: [84, 84]
     window_length: 4

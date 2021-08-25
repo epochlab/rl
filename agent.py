@@ -162,12 +162,12 @@ class A2CAgent:
     def discounted_rewards(self, rewards):
         discounted_rewards = np.zeros_like(rewards)
 
-        running_add = 0
+        sum_reward = 0
         for t in reversed(range(0, len(rewards))):
             if rewards[t] != 0:
-                running_add = 0
-            running_add = running_add * self.GAMMA + rewards[t]
-            discounted_rewards[t] = running_add
+                sum_reward = 0
+            sum_reward = sum_reward * self.GAMMA + rewards[t]
+            discounted_rewards[t] = sum_reward
 
         return discounted_rewards
 
@@ -182,7 +182,7 @@ class A2CAgent:
         else:
             return 0
 
-        update_inputs = np.zeros(((episode_length,) + self.STATE_SIZE)) # Episode_lengthx64x64x4
+        update_inputs = np.zeros(((episode_length,) + self.STATE_SIZE))
         for i in range(episode_length):
             update_inputs[i,:,:,:] = self.state_history[i]
 

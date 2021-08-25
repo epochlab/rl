@@ -33,8 +33,6 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
 
 agent = A2CAgent(config, sandbox, env, action_space)
 
-memory = 123
-
 # -----------------------------
 
 timestamp, summary_writer = log_feedback(log_dir)
@@ -43,7 +41,8 @@ print("Job ID:", timestamp)
 frame_count = 0
 episode_count = 0
 
-loss = 0
+a_loss = 0
+c_loss = 0
 
 episode_reward_history = []
 episode_reward = 0
@@ -80,6 +79,8 @@ while not env.is_episode_finished():  # Run until solved
 
     if terminal and frame_count > config['update_after_actions']:
         loss = agent.learn(actor, critic, action_space)
+        a_loss = float(np.array(loss[0]))
+        c_loss = float(np.array(loss[1]))
 
     episode_reward_history.append(episode_reward)
     if len(episode_reward_history) > 100:
@@ -88,6 +89,7 @@ while not env.is_episode_finished():  # Run until solved
 
     # Feedback
     with summary_writer.as_default():
-        tf.summary.scalar('loss', loss, step=episode_count)
+        tf.summary.scalar('a_loss', a_loss, step=episode_count)
+        tf.summary.scalar('c_loss', c_loss, step=episode_count)
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
         tf.summary.scalar('max_life', max_life, step=episode_count)
