@@ -15,6 +15,7 @@ class Sandbox:
         self.FPS = config['fps']
         self.GRADE = config['grade']
         self.VISIBLE = config['visible']
+        self.FACTOR = config['reward_factor']
 
     def build_env(self, config_path, AOV=False):
         env = vizdoom.DoomGame()
@@ -97,7 +98,7 @@ class Sandbox:
         next_frame = state.screen_buffer
         stack, next_stack_state = self.framestack(stack, next_frame, False)
         info = state.game_variables
-        reward = self.shape_reward(reward, 0.001, info, prev_info)
+        reward = self.shape_reward(reward, self.FACTOR, info, prev_info)
         return next_stack_state, reward, terminal, info
 
     def shape_reward(self, reward, factor, info, prev_info):
