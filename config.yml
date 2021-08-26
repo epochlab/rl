@@ -35,7 +35,7 @@
     env_name: "PongDeterministic-v4"
     visible: True
 
-    input_shape: [84, 84]
+    input_shape: [80, 80]
     window_length: 4
     grade: True
     crop: True

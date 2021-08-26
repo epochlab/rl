@@ -2,23 +2,12 @@ import os, random, pylab, cv2
 import gym
 
 import numpy as np
+from tensorflow.keras.models import load_model
 
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Lambda, Add, Conv2D, Flatten
-from tensorflow.keras.optimizers import Adam, RMSprop
-from tensorflow.keras import backend as K
+from networks import policy_gradient
+from utils import load_config
 
-def OurModel(input_shape, action_space, lr):
-    inputs = Input(input_shape)
-
-    x = Flatten(input_shape=input_shape)(inputs)
-    x = Dense(512, activation="elu", kernel_initializer='he_uniform')(x)
-    action = Dense(action_space, activation="softmax", kernel_initializer='he_uniform')(x)
-
-    model = Model(inputs=inputs, outputs=action)
-    model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=lr))
-
-    return model
+config = load_config('config.yml')['atari-pg']
 
 class PGAgent:
     # Policy Gradient Main Optimization Algorithm
@@ -29,11 +18,11 @@ class PGAgent:
         self.env = gym.make(env_name)
         self.action_size = self.env.action_space.n
         self.EPISODES, self.max_average = 10000, -21.0 # specific for pong
-        self.lr = 0.000025
+        self.lr = config['learning_rate']
 
-        self.ROWS = 80
-        self.COLS = 80
-        self.REM_STEP = 4
+        self.ROWS = config['input_shape'][0]
+        self.COLS = config['input_shape'][1]
+        self.REM_STEP = config['window_length']
 
         # Instantiate games and plot memory
         self.states, self.actions, self.rewards = [], [], []
@@ -48,7 +37,7 @@ class PGAgent:
         self.Model_name = os.path.join(self.Save_Path, self.path)
 
         # Create Actor network model
-        self.Actor = OurModel(input_shape=self.state_size, action_space = self.action_size, lr=self.lr)
+        self.Actor = policy_gradient(input_shape=self.state_size, action_space = self.action_size, lr=self.lr)
 
     def remember(self, state, action, reward):
         # store episode actions to memory
