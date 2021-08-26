@@ -31,16 +31,15 @@
     epsilon_max: 1.0
     epsilon_annealer: (epsilon_max - epsilon_min)
 
-  doom-a2c:
-    env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
+  atari-pg:
+    env_name: "PongDeterministic-v4"
     visible: True
-    reward_factor: 1
 
     input_shape: [84, 84]
     window_length: 4
-    fps: 4
-    grade: False
+    grade: True
+    crop: True
 
-    learning_rate: 0.0001
+    learning_rate: 0.000025
     gamma: 0.99
-    update_after_actions: 100
+    update_after_actions: 0
