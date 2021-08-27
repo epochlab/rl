@@ -2,12 +2,22 @@ import os, random, pylab, cv2
 import gym
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 from wrappers.gym_atari import Sandbox
 from agent import PolicyAgent
 from networks import policy_gradient
 from utils import load_config
+
+# -----------------------------
+
+physical_devices = tf.config.experimental.list_physical_devices("GPU")
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+print("GPU is", "available" if physical_devices else "NOT AVAILABLE")
+print("Eager mode:", tf.executing_eagerly())
+
+# -----------------------------
 
 config = load_config('config.yml')['atari-pg']
 log_dir = "metrics/"
@@ -70,56 +80,19 @@ class PGAgent:
 
         return self.average[-1]
 
-    def GetImage(self, frame):
-        # croping frame to 80x80 size
-        frame_cropped = frame[35:195:2, ::2,:]
-        if frame_cropped.shape[0] != self.COLS or frame_cropped.shape[1] != self.ROWS:
-            # OpenCV resize function
-            frame_cropped = cv2.resize(frame, (self.COLS, self.ROWS), interpolation=cv2.INTER_CUBIC)
-
-        # converting to RGB (numpy way)
-        frame_rgb = 0.299*frame_cropped[:,:,0] + 0.587*frame_cropped[:,:,1] + 0.114*frame_cropped[:,:,2]
-
-        # convert everything to black and white (agent will train faster)
-        frame_rgb[frame_rgb < 100] = 0
-        frame_rgb[frame_rgb >= 100] = 255
-        # converting to RGB (OpenCV way)
-        #frame_rgb = cv2.cvtColor(frame_cropped, cv2.COLOR_RGB2GRAY)
-
-        # dividing by 255 we expresses value to 0-1 representation
-        new_frame = np.array(frame_rgb).astype(np.float32) / 255.0
-
-        # push our data by 1 frame, similar as deq() function work
-        self.image_memory = np.roll(self.image_memory, 1, axis = 0)
-
-        # inserting new frame to free space
-        self.image_memory[0,:,:] = new_frame
-
-        # show image frame
-        return np.expand_dims(self.image_memory, axis=0)
-
-    def reset(self):
-        frame = self.env.reset()
-        for i in range(self.REM_STEP):
-            state = self.GetImage(frame)
-        return state
-
-    def step(self,action):
-        next_state, reward, done, info = self.env.step(action)
-        next_state = self.GetImage(next_state)
-        return next_state, reward, done, info
-
     def run(self):
         for e in range(self.EPISODES):
-            state = self.reset()
+            # state = self.reset()
+            state = sandbox.reset(env)
             done, score, SAVING = False, 0, ''
             while not done:
-                self.env.render()
+                env.render()
                 # Actor picks an action
                 model = self.Actor
                 action = agent2.act(state, model)
                 # Retrieve new state, reward, and whether the state is terminal
-                next_state, reward, done, _ = self.step(action)
+                # next_state, reward, done, _ = self.step(action)
+                next_state, reward, done, _ = sandbox.step(env, action)
                 # Memorize (state, action, reward) for training
                 agent2.push(state, action, reward)
                 # Update current state
