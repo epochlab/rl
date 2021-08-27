@@ -6,7 +6,7 @@ import tensorflow as tf
 from wrappers.gym_atari import Sandbox
 from agent import PolicyAgent
 from networks import policy_gradient
-from utils import load_config
+from utils import load_config, log_feedback
 
 # -----------------------------
 
@@ -29,6 +29,9 @@ model = policy_gradient(input_shape=(config['window_length'], config['input_shap
 agent = PolicyAgent(config, sandbox, env, action_space)
 
 # -----------------------------
+
+timestamp, summary_writer = log_feedback(log_dir)
+print("Job ID:", timestamp)
 
 EPISODES = 10000
 episode_reward_history = []
@@ -66,5 +69,10 @@ for e in range(EPISODES):
         if len(episode_reward_history) > 100:
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
+
+        # Feedback
+        with summary_writer.as_default():
+            tf.summary.scalar('running_reward', running_reward, step=e)
+            tf.summary.scalar('max_life', max_life, step=e)
 
 env.close()
