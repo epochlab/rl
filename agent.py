@@ -135,66 +135,50 @@ class DQNAgent:
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
 
-class A2CAgent:
+class PolicyAgent:
     def __init__(self, config, sandbox, env, action_space):
         self.SANDBOX = sandbox
         self.ENV = env
         self.ACTION_SPACE = action_space
 
         self.GAMMA = config['gamma']
-        self.STATE_SIZE = (config['input_shape'][0], config['input_shape'][1], config['window_length'])
+        self.STATE_SIZE = (config['window_length'], config['input_shape'][0], config['input_shape'][1])
 
         self.state_history = []
-        self.reward_history = []
         self.action_history = []
+        self.reward_history = []
 
-    def get_action(self, state, model):
-        state = tf.expand_dims(state, 0)
-        policy = model.predict(state).flatten()
-        action = np.random.choice(self.ACTION_SPACE, 1, p=policy)[0]
-        return action, policy
+    def act(self, state, model):
+        policy = model.predict(state)[0]
+        action = np.random.choice(self.ACTION_SPACE, p=policy)
+        return action
 
-    def push(self, action, state, reward):
-        self.action_history.append(action)
+    def push(self, state, action_idx, reward):
+        action = np.zeros([self.ACTION_SPACE])
+        action[action_idx] = 1
+
         self.state_history.append(state)
+        self.action_history.append(action)
         self.reward_history.append(reward)
 
-    def discounted_rewards(self, rewards):
-        discounted_rewards = np.zeros_like(rewards)
-
+    def discount_rewards(self):
         sum_reward = 0
-        for t in reversed(range(0, len(rewards))):
-            if rewards[t] != 0:
+        discounted_r = np.zeros_like(self.reward_history)
+        for i in reversed(range(0,len(self.reward_history))):
+            if self.reward_history[i] != 0: # reset the sum, since this was a game boundary (pong specific!)
                 sum_reward = 0
-            sum_reward = sum_reward * self.GAMMA + rewards[t]
-            discounted_rewards[t] = sum_reward
+            sum_reward = sum_reward * self.GAMMA + self.reward_history[i]
+            discounted_r[i] = sum_reward
 
-        return discounted_rewards
+        discounted_r -= np.mean(discounted_r) # normalizing the result
+        discounted_r /= np.std(discounted_r) # divide by standard deviation
+        return discounted_r
 
-    def learn(self, actor, critic, action_space):
-        episode_length = len(self.state_history)
+    def learn(self, model):
+        states = np.vstack(self.state_history)                                                      # reshape memory to appropriate shape for training
+        actions = np.vstack(self.action_history)
 
-        discounted_rewards = self.discounted_rewards(self.reward_history)
-        discounted_rewards -= np.mean(discounted_rewards)
+        discounted_r = self.discount_rewards()
 
-        if np.std(discounted_rewards):
-            discounted_rewards /= np.std(discounted_rewards)
-        else:
-            return 0
-
-        update_inputs = np.zeros(((episode_length,) + self.STATE_SIZE))
-        for i in range(episode_length):
-            update_inputs[i,:,:,:] = self.state_history[i]
-
-        values = critic.predict(update_inputs)
-
-        advantages = np.zeros((episode_length, action_space))
-        for i in range(episode_length):
-            advantages[i][self.action_history[i]] = discounted_rewards[i] - values[i]
-
-        actor_loss = actor.fit(update_inputs, advantages, epochs=1, verbose=0)
-        critic_loss = critic.fit(update_inputs, discounted_rewards, epochs=1, verbose=0)
-
-        self.action_history, self.state_history, self.reward_history = [], [], []
-
-        return actor_loss.history['loss'], critic_loss.history['loss']
+        model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)                 # training PG network
+        self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory

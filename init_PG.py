@@ -4,10 +4,20 @@ import gym
 import numpy as np
 from tensorflow.keras.models import load_model
 
+from wrappers.gym_atari import Sandbox
+from agent import PolicyAgent
 from networks import policy_gradient
 from utils import load_config
 
 config = load_config('config.yml')['atari-pg']
+log_dir = "metrics/"
+
+# -----------------------------
+
+sandbox = Sandbox(config)
+env, action_space = sandbox.build_env(config['env_name'])
+
+agent2 = PolicyAgent(config, sandbox, env, action_space)
 
 class PGAgent:
     # Policy Gradient Main Optimization Algorithm
@@ -24,8 +34,6 @@ class PGAgent:
         self.COLS = config['input_shape'][1]
         self.REM_STEP = config['window_length']
 
-        # Instantiate games and plot memory
-        self.states, self.actions, self.rewards = [], [], []
         self.scores, self.episodes, self.average = [], [], []
 
         self.Save_Path = 'Models'
@@ -38,48 +46,6 @@ class PGAgent:
 
         # Create Actor network model
         self.Actor = policy_gradient(input_shape=self.state_size, action_space = self.action_size, lr=self.lr)
-
-    def remember(self, state, action, reward):
-        # store episode actions to memory
-        self.states.append(state)
-        action_onehot = np.zeros([self.action_size])
-        action_onehot[action] = 1
-        self.actions.append(action_onehot)
-        self.rewards.append(reward)
-
-    def act(self, state):
-        # Use the network to predict the next action to take, using the model
-        prediction = self.Actor.predict(state)[0]
-        action = np.random.choice(self.action_size, p=prediction)
-        return action
-
-    def discount_rewards(self, reward):
-        # Compute the gamma-discounted rewards over an episode
-        gamma = 0.99    # discount rate
-        running_add = 0
-        discounted_r = np.zeros_like(reward)
-        for i in reversed(range(0,len(reward))):
-            if reward[i] != 0: # reset the sum, since this was a game boundary (pong specific!)
-                running_add = 0
-            running_add = running_add * gamma + reward[i]
-            discounted_r[i] = running_add
-
-        discounted_r -= np.mean(discounted_r) # normalizing the result
-        discounted_r /= np.std(discounted_r) # divide by standard deviation
-        return discounted_r
-
-    def replay(self):
-        # reshape memory to appropriate shape for training
-        states = np.vstack(self.states)
-        actions = np.vstack(self.actions)
-
-        # Compute discounted rewards
-        discounted_r = self.discount_rewards(self.rewards)
-
-        # training PG network
-        self.Actor.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)
-        # reset training memory
-        self.states, self.actions, self.rewards = [], [], []
 
     def load(self, Actor_name):
         self.Actor = load_model(Actor_name, compile=False)
@@ -130,10 +96,6 @@ class PGAgent:
         self.image_memory[0,:,:] = new_frame
 
         # show image frame
-        #self.imshow(self.image_memory,0)
-        #self.imshow(self.image_memory,1)
-        #self.imshow(self.image_memory,2)
-        #self.imshow(self.image_memory,3)
         return np.expand_dims(self.image_memory, axis=0)
 
     def reset(self):
@@ -154,11 +116,12 @@ class PGAgent:
             while not done:
                 self.env.render()
                 # Actor picks an action
-                action = self.act(state)
+                model = self.Actor
+                action = agent2.act(state, model)
                 # Retrieve new state, reward, and whether the state is terminal
                 next_state, reward, done, _ = self.step(action)
                 # Memorize (state, action, reward) for training
-                self.remember(state, action, reward)
+                agent2.push(state, action, reward)
                 # Update current state
                 state = next_state
                 score += reward
@@ -173,7 +136,7 @@ class PGAgent:
                         SAVING = ""
                     print("episode: {}/{}, score: {}, average: {:.2f} {}".format(e, self.EPISODES, score, average, SAVING))
 
-                    self.replay()
+                    agent2.learn(model)
 
         # close environemnt when finish training
         self.env.close()
