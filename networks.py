@@ -76,11 +76,11 @@ def actor_network(input_shape, window_length, action_space, lr):
 
     layer4 = layers.Flatten()(layer3)
 
-    layer5 = layers.Dense(output_dim=64)(layer4)
+    layer5 = layers.Dense(64)(layer4)
     layer5 = layers.BatchNormalization()(layer5)
     layer5 = layers.Activation('relu')(layer5)
 
-    layer6 = layers.Dense(output_dim=32)(layer5)
+    layer6 = layers.Dense(32)(layer5)
     layer6 = layers.BatchNormalization()(layer6)
     layer6 = layers.Activation('relu')(layer6)
 
@@ -107,11 +107,11 @@ def critic_network(input_shape, window_length, value_size, lr):
 
     layer4 = layers.Flatten()(layer3)
 
-    layer5 = layers.Dense(output_dim=64)(layer4)
+    layer5 = layers.Dense(64)(layer4)
     layer5 = layers.BatchNormalization()(layer5)
     layer5 = layers.Activation('relu')(layer5)
 
-    layer6 = layers.Dense(output_dim=32)(layer5)
+    layer6 = layers.Dense(32)(layer5)
     layer6 = layers.BatchNormalization()(layer6)
     layer6 = layers.Activation('relu')(layer6)
 
