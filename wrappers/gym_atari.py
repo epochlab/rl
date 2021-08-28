@@ -10,8 +10,9 @@ class Sandbox:
     def __init__(self, config):
         self.INPUT_SHAPE = config['input_shape']
         self.WINDOW_LENGTH = config['window_length']
-
+        self.GRADE = config['grade']
         self.VISIBLE = config['visible']
+        self.FACTOR = config['reward_factor']
 
         self.STACK = np.zeros((config['window_length'], config['input_shape'][0], config['input_shape'][1]))
 
@@ -27,11 +28,12 @@ class Sandbox:
         return env, action_space
 
     def preprocess(self, frame):
-        frame = frame[35:191]
         frame = skimage.color.rgb2gray(frame)
 
-        frame[frame < 0.5] = 0
-        frame[frame >= 0.5] = 255
+        if self.GRADE:
+            frame = frame[35:191]
+            frame[frame < 0.5] = 0
+            frame[frame >= 0.5] = 255
 
         frame = skimage.transform.resize(frame, self.INPUT_SHAPE)
         return frame
@@ -56,7 +58,17 @@ class Sandbox:
             env.render()
         next_state, reward, terminal, info = env.step(action)
         next_state = self.framestack(next_state)
+
         return next_state, reward, terminal, info
+
+    def punish(self, life, terminal, info):
+        if info['ale.lives'] < life:
+            terminal_life_lost = True
+        else:
+            terminal_life_lost = terminal
+
+        life = info['ale.lives']
+        return reward, terminal_life_lost, life
 
     def view_human(self, env):
         frame = env.render(mode='rgb_array')
