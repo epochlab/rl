@@ -59,7 +59,7 @@ while True:
     agent.push(state, action, reward)
 
     if terminal:
-        loss = agent.learn(model)
+        loss = agent.learn_policy(model)
 
         episode_reward = 0
         episode_count += 1
