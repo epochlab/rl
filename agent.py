@@ -174,7 +174,7 @@ class PolicyAgent:
         discounted_r /= np.std(discounted_r) # divide by standard deviation
         return discounted_r
 
-    def learn(self, model):
+    def learn_policy(self, model):
         states = np.vstack(self.state_history)                                                      # reshape memory to appropriate shape for training
         actions = np.vstack(self.action_history)
 
@@ -184,6 +184,21 @@ class PolicyAgent:
 
         self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
         return history.history['loss'][0]
+
+    def learn_a2c(self, actor, critic):
+        episode_length = len(self.state_history)
+        states = np.vstack(self.state_history)                                                      # reshape memory to appropriate shape for training
+        actions = np.vstack(self.action_history)
+
+        values = critic.predict(states)[:, 0]
+        discounted_r = self.discount_rewards()
+        advantages = discounted_r - values
+
+        actor_history = actor.fit(states, actions, sample_weight=advantages, epochs=1, verbose=0)                 # training PG network
+        critic_history = critic.fit(states, discounted_r, epochs=1, verbose=0)                 # training PG network
+
+        self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
+        return actor_history.history['loss'][0], critic_history.history['loss'][0]
 
     def evaluate(self, model, log_dir, episode_id):
         terminal, state = self.SANDBOX.reset(self.ENV)
