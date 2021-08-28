@@ -11,6 +11,8 @@ class Sandbox:
         self.INPUT_SHAPE = config['input_shape']
         self.WINDOW_LENGTH = config['window_length']
 
+        self.VISIBLE = config['visible']
+
         self.STACK = np.zeros((config['window_length'], config['input_shape'][0], config['input_shape'][1]))
 
     def build_env(self, env_name):
@@ -43,12 +45,15 @@ class Sandbox:
         return np.expand_dims(self.STACK, axis=0)
 
     def reset(self, env):
+        terminal = False
         frame = env.reset()
         for _ in range(self.WINDOW_LENGTH):
             state = self.framestack(frame)
-        return state
+        return terminal, state
 
     def step(self, env, action):
+        if self.VISIBLE:
+            env.render()
         next_state, reward, terminal, info = env.step(action)
         next_state = self.framestack(next_state)
         return next_state, reward, terminal, info

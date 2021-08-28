@@ -52,13 +52,11 @@ max_life = 0
 
 print("Training...")
 for _ in range(EPISODES):
-    state = sandbox.reset(env)
-    terminal = False
+    terminal, state = sandbox.reset(env)
 
     while not terminal:
-        env.render()
         action = agent.act(state, model)
-        state_next, reward, terminal, _ = sandbox.step(env, action)
+        state_next, reward, terminal, info = sandbox.step(env, action)
         agent.push(state, action, reward)
 
         if terminal:
