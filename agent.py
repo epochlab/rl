@@ -183,5 +183,25 @@ class PolicyAgent:
         model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)                 # training PG network
         self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
 
+    def evaluate(self, model, log_dir, episode_id):
+        terminal, state = self.SANDBOX.reset(self.ENV)
+
+        frames = []
+        episode_reward = 0
+
+        while not terminal:
+            frames = capture(self.ENV, self.SANDBOX, frames)                                                                        # Capture gameplay experience
+            action = self.act(state, model)                                                                                  # Predict action Q-values from environment state and take best action
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action)           # Apply the sampled action in our environment
+
+            episode_reward += reward
+            state = state_next
+
+            if terminal:
+                break
+
+        render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
+        return episode_reward
+
     def save(self, model, outdir):
         model.save(outdir + '/model.h5')

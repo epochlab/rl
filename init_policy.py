@@ -81,11 +81,12 @@ for _ in range(EPISODES):
 
         if terminal and running_reward > min_reward:
             agent.save(model, log_dir + timestamp)
-            # eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
+            eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
             min_reward = running_reward
 
         with summary_writer.as_default():
             tf.summary.scalar('running_reward', running_reward, step=episode_count)
+            tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
             tf.summary.scalar('max_life', max_life, step=episode_count)
 
         if running_reward == config['min_max_reward'][1]:

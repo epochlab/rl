@@ -57,3 +57,7 @@ class Sandbox:
         next_state, reward, terminal, info = env.step(action)
         next_state = self.framestack(next_state)
         return next_state, reward, terminal, info
+
+    def view_human(self, env):
+        frame = env.render(mode='rgb_array')
+        return frame
