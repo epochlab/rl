@@ -31,10 +31,10 @@
     epsilon_max: 1.0
     epsilon_annealer: (epsilon_max - epsilon_min)
 
-  atari-pg:
+  atari-policy:
     env_name: "PongDeterministic-v4"
     visible: True
-    min_max_reward: [-21, 21]
+    min_max: [-21, 21]
 
     input_shape: [84, 84]
     window_length: 4
