@@ -40,6 +40,8 @@ EPISODES = 10000
 frame_count = 0
 episode_count = 0
 
+loss = 0
+
 episode_reward_history = []
 episode_reward = config['min_max_reward'][0]
 eval_reward = config['min_max_reward'][0]
@@ -60,7 +62,7 @@ for _ in range(EPISODES):
         agent.push(state, action, reward)
 
         if terminal:
-            agent.learn(model)
+            loss = agent.learn(model)
 
             episode_reward = 0
             episode_count += 1
@@ -79,12 +81,13 @@ for _ in range(EPISODES):
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
 
-        if terminal and running_reward > min_reward:
+        if terminal and running_reward > (min_reward + 1):
             agent.save(model, log_dir + timestamp)
             eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
             min_reward = running_reward
 
         with summary_writer.as_default():
+            tf.summary.scalar('loss', loss, step=episode_count)
             tf.summary.scalar('running_reward', running_reward, step=episode_count)
             tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
             tf.summary.scalar('max_life', max_life, step=episode_count)

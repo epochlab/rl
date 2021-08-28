@@ -180,8 +180,10 @@ class PolicyAgent:
 
         discounted_r = self.discount_rewards()
 
-        model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)                 # training PG network
+        history = model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)                 # training PG network
+
         self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
+        return history.history['loss'][0]
 
     def evaluate(self, model, log_dir, episode_id):
         terminal, state = self.SANDBOX.reset(self.ENV)
