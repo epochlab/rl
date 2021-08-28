@@ -26,6 +26,8 @@ sandbox = Sandbox(config)
 env, action_space = sandbox.build_env(config['env_name'])
 
 model = policy_gradient(input_shape=(config['window_length'], config['input_shape'][0], config['input_shape'][1]), action_space=action_space, lr=config['learning_rate'])
+model.summary()
+
 agent = PolicyAgent(config, sandbox, env, action_space)
 
 # -----------------------------
@@ -34,16 +36,20 @@ timestamp, summary_writer = log_feedback(log_dir)
 print("Job ID:", timestamp)
 
 EPISODES = 10000
-episode_reward_history = []
 
 frame_count = 0
+
+episode_reward_history = []
+episode_reward = 0
 
 life = 0
 max_life = 0
 
+# -----------------------------
+
 for e in range(EPISODES):
     state = sandbox.reset(env)
-    terminal, episode_reward = False, 0
+    terminal = False
 
     while not terminal:
         env.render()
@@ -56,6 +62,7 @@ for e in range(EPISODES):
             print("Frame {}, Episode: {}/{}, Reward: {}, Average: {:.2f}".format(frame_count, e, EPISODES, episode_reward, running_reward))
 
             episode_reward = 0
+
             max_life = max(life, max_life)
             life = 0
         else:
