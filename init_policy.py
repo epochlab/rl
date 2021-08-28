@@ -6,7 +6,7 @@ import tensorflow as tf
 from wrappers.gym_atari import Sandbox
 from agent import PolicyAgent
 from networks import policy_gradient
-from utils import load_config, log_feedback
+from utils import load_config, log_feedback, save
 
 # -----------------------------
 
@@ -38,30 +38,34 @@ print("Job ID:", timestamp)
 EPISODES = 10000
 
 frame_count = 0
+episode_count = 0
 
 episode_reward_history = []
-episode_reward = 0
+episode_reward = config['min_max_reward'][0]
+eval_reward = config['min_max_reward'][0]
+min_reward = config['min_max_reward'][0]
 
 life = 0
 max_life = 0
 
 # -----------------------------
 
-for e in range(EPISODES):
+print("Training...")
+for _ in range(EPISODES):
     state = sandbox.reset(env)
     terminal = False
 
     while not terminal:
         env.render()
-        action = agent.act(state, model)                                    # Actor picks an action
-        state_next, reward, terminal, _ = sandbox.step(env, action)         # Retrieve new state, reward, and whether the state is terminal
-        agent.push(state, action, reward)                                   # Memorize (state, action, reward) for training
+        action = agent.act(state, model)
+        state_next, reward, terminal, _ = sandbox.step(env, action)
+        agent.push(state, action, reward)
 
         if terminal:
             agent.learn(model)
-            print("Frame {}, Episode: {}/{}, Reward: {}, Average: {:.2f}".format(frame_count, e, EPISODES, episode_reward, running_reward))
 
             episode_reward = 0
+            episode_count += 1
 
             max_life = max(life, max_life)
             life = 0
@@ -69,7 +73,7 @@ for e in range(EPISODES):
             episode_reward += reward
             life += 1
 
-        state = state_next                                                  # Update current state
+        state = state_next
         frame_count += 1
 
         episode_reward_history.append(episode_reward)
@@ -77,9 +81,18 @@ for e in range(EPISODES):
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
 
-        # Feedback
+        if terminal and running_reward > min_reward:
+            agent.save(model, log_dir + timestamp)
+            # eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
+            min_reward = running_reward
+
         with summary_writer.as_default():
-            tf.summary.scalar('running_reward', running_reward, step=e)
-            tf.summary.scalar('max_life', max_life, step=e)
+            tf.summary.scalar('running_reward', running_reward, step=episode_count)
+            tf.summary.scalar('max_life', max_life, step=episode_count)
+
+        if running_reward == config['min_max_reward'][1]:
+            agent.save(model, log_dir + timestamp)
+            print("Solved at episode {}!".format(episode_count))
+            break
 
 env.close()

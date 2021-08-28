@@ -182,3 +182,6 @@ class PolicyAgent:
 
         model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)                 # training PG network
         self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
+
+    def save(self, model, outdir):
+        model.save(outdir + '/model.h5')

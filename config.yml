@@ -34,6 +34,7 @@
   atari-pg:
     env_name: "PongDeterministic-v4"
     visible: True
+    min_max_reward: [-21, 21]
 
     input_shape: [80, 80]
     window_length: 4
