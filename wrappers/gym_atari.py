@@ -12,8 +12,7 @@ class Sandbox:
         self.WINDOW_LENGTH = config['window_length']
         self.GRADE = config['grade']
         self.VISIBLE = config['visible']
-
-        self.STACK = np.zeros((config['window_length'], config['input_shape'][0], config['input_shape'][1]))
+        self.STACK = np.zeros((config['input_shape'][0], config['input_shape'][1], config['window_length']))
 
     def build_env(self, env_name):
         env = gym.make(env_name)
@@ -34,9 +33,8 @@ class Sandbox:
     def framestack(self, state):
         frame = self.preprocess(state)
         frame = np.array(frame).astype(np.float32) / 255.0
-
-        self.STACK = np.roll(self.STACK, 1, axis=0)
-        self.STACK[0,:,:] = frame
+        self.STACK = np.roll(self.STACK, 1, axis=2)
+        self.STACK[:,:,0] = frame
         return np.expand_dims(self.STACK, axis=0)
 
     def reset(self, env):

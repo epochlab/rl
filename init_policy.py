@@ -17,7 +17,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['atari-pg']
+config = load_config('config.yml')['atari-policy']
 log_dir = "metrics/"
 
 # -----------------------------
@@ -25,7 +25,7 @@ log_dir = "metrics/"
 sandbox = Sandbox(config)
 env, action_space = sandbox.build_env(config['env_name'])
 
-model = policy_gradient(input_shape=(config['window_length'], config['input_shape'][0], config['input_shape'][1]), action_space=action_space, lr=config['learning_rate'])
+model = policy_gradient(config['input_shape'], config['window_length'], action_space, config['learning_rate'])
 model.summary()
 
 agent = PolicyAgent(config, sandbox, env, action_space)
@@ -42,8 +42,8 @@ loss = 0
 
 episode_reward_history = []
 episode_reward = 0
-eval_reward = config['min_max_reward'][0]
-min_reward = config['min_max_reward'][0]
+eval_reward = config['min_max'][0]
+min_reward = config['min_max'][0]
 
 life = 0
 max_life = 0
@@ -92,7 +92,7 @@ while True:
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
-    if running_reward == config['min_max_reward'][1]:
+    if running_reward == config['min_max'][1]:
         agent.save(model, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break

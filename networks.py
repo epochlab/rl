@@ -47,8 +47,8 @@ def dueling_dqn(input_shape, window_length, action_space):
 
 # PG -------------------------
 
-def policy_gradient(input_shape, action_space, lr):
-    inputs = layers.Input(input_shape)
+def policy_gradient(input_shape, window_length, action_space, lr):
+    inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length))
 
     layer1 = layers.Flatten()(inputs)
     layer2 = layers.Dense(512, activation="elu", kernel_initializer='he_uniform')(layer1)
@@ -57,5 +57,4 @@ def policy_gradient(input_shape, action_space, lr):
 
     model = keras.Model(inputs=inputs, outputs=action)
     model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=lr))
-
     return model
