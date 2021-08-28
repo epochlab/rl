@@ -79,7 +79,7 @@ while True:
     running_reward = np.mean(episode_reward_history)
 
     if terminal:
-        print("Episode: {}, Reward: {}, Loss: {}, Max Life: {}".format(episode_count, running_reward, loss, max_life))
+        print("Frame: {}, Episode: {}, Reward: {}, Loss: {}, Max Life: {}".format(frame_count, episode_count, running_reward, loss, max_life))
 
     with summary_writer.as_default():
         tf.summary.scalar('loss', loss, step=episode_count)
