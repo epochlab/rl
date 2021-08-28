@@ -17,16 +17,17 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['atari-policy']
+config = load_config('config.yml')['atari-a2c']
 log_dir = "metrics/"
 
 # -----------------------------
 
 sandbox = Sandbox(config)
 env, action_space = sandbox.build_env(config['env_name'])
+value_size = 1
 
-model = policy_gradient(config['input_shape'], config['window_length'], action_space, config['learning_rate'])
-model.summary()
+actor = actor_network(config['input_shape'], config['window_length'], action_space, config['learning_rate'])
+critic = critic_network(config['input_shape'], config['window_length'], value_size, config['learning_rate'])
 
 agent = PolicyAgent(config, sandbox, env, action_space)
 

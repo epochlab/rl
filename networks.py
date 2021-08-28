@@ -45,7 +45,7 @@ def dueling_dqn(input_shape, window_length, action_space):
     model.compile(loss='mse')
     return model
 
-# PG -------------------------
+# Policy ----------------------
 
 def policy_gradient(input_shape, window_length, action_space, lr):
     inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length))
@@ -57,4 +57,66 @@ def policy_gradient(input_shape, window_length, action_space, lr):
 
     model = keras.Model(inputs=inputs, outputs=action)
     model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=lr))
+    return model
+
+def actor_network(input_shape, window_length, action_space, lr):
+    inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length))
+
+    layer1 = layers.Conv2D(32, 8, strides=4)(inputs)
+    layer1 = layers.BatchNormalization()(layer1)
+    layer1 = layers.Activation('relu')(layer1)
+
+    layer2 = layers.Conv2D(64, 4, strides=2)(layer1)
+    layer2 = layers.BatchNormalization()(layer2)
+    layer2 = layers.Activation('relu')(layer2)
+
+    layer3 = layers.Conv2D(64, 3)(layer2)
+    layer3 = layers.BatchNormalization()(layer3)
+    layer3 = layers.Activation('relu')(layer3)
+
+    layer4 = layers.Flatten()(layer3)
+
+    layer5 = layers.Dense(output_dim=64)(layer4)
+    layer5 = layers.BatchNormalization()(layer5)
+    layer5 = layers.Activation('relu')(layer5)
+
+    layer6 = layers.Dense(output_dim=32)(layer5)
+    layer6 = layers.BatchNormalization()(layer6)
+    layer6 = layers.Activation('relu')(layer6)
+
+    action = layers.Dense(action_space, activation="softmax", kernel_initializer='he_uniform')(layer6)
+
+    model = keras.Model(inputs=inputs, outputs=action)
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=lr))
+    return model
+
+def critic_network(input_shape, window_length, value_size, lr):
+    inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length))
+
+    layer1 = layers.Conv2D(32, 8, strides=4)(inputs)
+    layer1 = layers.BatchNormalization()(layer1)
+    layer1 = layers.Activation('relu')(layer1)
+
+    layer2 = layers.Conv2D(64, 4, strides=2)(layer1)
+    layer2 = layers.BatchNormalization()(layer2)
+    layer2 = layers.Activation('relu')(layer2)
+
+    layer3 = layers.Conv2D(64, 3)(layer2)
+    layer3 = layers.BatchNormalization()(layer3)
+    layer3 = layers.Activation('relu')(layer3)
+
+    layer4 = layers.Flatten()(layer3)
+
+    layer5 = layers.Dense(output_dim=64)(layer4)
+    layer5 = layers.BatchNormalization()(layer5)
+    layer5 = layers.Activation('relu')(layer5)
+
+    layer6 = layers.Dense(output_dim=32)(layer5)
+    layer6 = layers.BatchNormalization()(layer6)
+    layer6 = layers.Activation('relu')(layer6)
+
+    action = layers.Dense(value_size, activation="linear", kernel_initializer='he_uniform')(layer6)
+
+    model = keras.Model(inputs=inputs, outputs=action)
+    model.compile(loss='mse', optimizer=Adam(lr=lr))
     return model
