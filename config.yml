@@ -34,10 +34,9 @@
   atari-pg:
     env_name: "PongDeterministic-v4"
     visible: True
-    reward_factor: 1
     min_max_reward: [-21, 21]
 
-    input_shape: [80, 80]
+    input_shape: [84, 84]
     window_length: 4
     grade: True
 

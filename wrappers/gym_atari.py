@@ -12,19 +12,12 @@ class Sandbox:
         self.WINDOW_LENGTH = config['window_length']
         self.GRADE = config['grade']
         self.VISIBLE = config['visible']
-        self.FACTOR = config['reward_factor']
 
         self.STACK = np.zeros((config['window_length'], config['input_shape'][0], config['input_shape'][1]))
 
     def build_env(self, env_name):
         env = gym.make(env_name)
         action_space = env.action_space.n
-
-        print('Frame:', env.observation_space)
-        print('States:', env.observation_space.shape[0])
-        print('Actions:', action_space)
-        env.unwrapped.get_action_meanings()
-
         return env, action_space
 
     def preprocess(self, frame):
@@ -56,19 +49,20 @@ class Sandbox:
     def step(self, env, action):
         if self.VISIBLE:
             env.render()
+
         next_state, reward, terminal, info = env.step(action)
         next_state = self.framestack(next_state)
+        reward = self.shape_reward(reward)
+
+        if terminal:
+            _, state = self.reset(env)
+            terminal = True
 
         return next_state, reward, terminal, info
 
-    def punish(self, life, terminal, info):
-        if info['ale.lives'] < life:
-            terminal_life_lost = True
-        else:
-            terminal_life_lost = terminal
-
-        life = info['ale.lives']
-        return reward, terminal_life_lost, life
+    def shape_reward(self, reward):
+        reward = np.sign(reward)
+        return reward
 
     def view_human(self, env):
         frame = env.render(mode='rgb_array')
