@@ -51,7 +51,8 @@ max_life = 0
 # -----------------------------
 
 print("Training...")
-terminal, state = sandbox.reset(env)
+terminal, state, info = sandbox.reset(env)
+prev_info = info
 
 while True:
     action = agent.act(state, model)
@@ -70,6 +71,7 @@ while True:
         episode_reward += reward
         life += 1
 
+    prev_info = info
     state = state_next
     frame_count += 1
 
