@@ -28,10 +28,6 @@ def log_feedback(log_dir):
     os.system("tensorboard --logdir=" + str(log_dir) + " --port=6006 &")
     return timestamp, summary_writer
 
-def save(model, model_target, outdir):
-    model.save(outdir + '/model.h5')
-    model_target.save(outdir + '/model_target.h5')
-
 def load(outdir):
     model = tf.keras.models.load_model(outdir + '/model.h5', compile=False)
     return model
