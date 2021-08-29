@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from wrappers.gym_atari import Sandbox
+from wrappers.doom import Sandbox
 from agent import PolicyAgent
 from networks import actor_critic
 from utils import load_config, log_feedback, save
@@ -17,7 +17,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['atari-a2c']
+config = load_config('config.yml')['doom-a2c']
 log_dir = "metrics/"
 
 # -----------------------------
