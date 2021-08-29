@@ -7,7 +7,7 @@ from wrappers.doom import Sandbox
 from agent import DQNAgent
 from memory import ExperienceReplayMemory, PrioritizedReplayMemory
 from networks import dqn, dueling_dqn
-from utils import load_config, log_feedback, save, load
+from utils import load_config, log_feedback
 
 # -----------------------------
 
@@ -51,8 +51,8 @@ loss = 0
 
 episode_reward_history = []
 episode_reward = 0
-eval_reward = 0
-min_reward = 0
+eval_reward = config['min_max'][0]
+min_reward = config['min_max'][0]
 
 life = 0
 max_life = 0
@@ -60,19 +60,19 @@ max_life = 0
 # -----------------------------
 
 print("Training...")
-info, prev_info, stack, state = sandbox.reset(env)
+terminal, state, info = sandbox.reset(env)
+prev_info = info
 
-while not env.is_episode_finished():  # Run until solved
-
-    action = agent.exploration(frame_count, state, model)                                                   # Use epsilon-greedy for exploration
-    state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)          # Apply the sampled action in our environment
+while True:
+    action = agent.exploration(frame_count, state, model)
+    state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
 
     if config['use_per']:
-        event = (action, state, state_next, reward, terminal)                                               # PrioritizedReplayMemory
+        event = (action, state, state_next, reward, terminal)
         td_error = agent.td_error(model, model_target, action, state, state_next, reward, terminal)
         memory.push(event, td_error)
     else:
-        memory.push(action, state, state_next, reward, terminal)                                            # Save actions and states to ExperienceReplayMemory
+        memory.push(action, state, state_next, reward, terminal)
 
     if terminal:
         episode_reward = 0
@@ -88,38 +88,39 @@ while not env.is_episode_finished():  # Run until solved
     state = state_next
     frame_count += 1
 
-    if frame_count % config['update_after_actions'] == 0 and frame_count > config['batch_size']:           # Learn every fourth frame and once batch size is over 32
+    if frame_count % config['update_after_actions'] == 0 and frame_count > config['batch_size']:
         loss = agent.learn(memory, model, model_target, optimizer)
 
-    if config['fixed']:                                                                                    # Update the the target network with new weights
+    if config['fixed']:
         agent.fixed_target(frame_count, model, model_target)
     else:
         agent.soft_target(model_target.trainable_variables, model.trainable_variables)
 
     if not config['use_per']:
-        memory.limit()                                                                                     # Limit memory cache to defined length
+        memory.limit()
 
-    # Update running reward to check condition for solving
+    if terminal:
+        print("Frame: {}, Episode: {}, Reward: {}, Loss: {}, Max Life: {}".format(frame_count, episode_count, running_reward, loss, max_life))
+
     episode_reward_history.append(episode_reward)
     if len(episode_reward_history) > 100:
         del episode_reward_history[:1]
     running_reward = np.mean(episode_reward_history)
 
-    # If running_reward has improved by factor of N; evalute & render without epsilon annealer.
     if terminal and running_reward > (min_reward + 0.1):
-        save(model, model_target, log_dir + timestamp)
+        agent.save(model, model_target, log_dir + timestamp)
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
-    # Feedback
     with summary_writer.as_default():
         tf.summary.scalar('loss', loss, step=episode_count)
         tf.summary.scalar('running_reward', running_reward, step=episode_count)
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
         tf.summary.scalar('max_life', max_life, step=episode_count)
 
-    # # Condition to consider the task solved
-    if running_reward == 25:                                                    # Pong: 21 | Breakdout: 40 | Doom (Defend the Center): 100 | Doom (Deadly Corridor): 25
-        save(model, model_target, log_dir + timestamp)
+    if running_reward == config['min_max'][1]:
+        agent.save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
+
+env.close()
