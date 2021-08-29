@@ -1,8 +1,9 @@
 ---
   doom-dqn:
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/deadly_corridor.cfg"
-    visible: False
+    visible: True
     reward_factor: 0.001
+    min_max: [0, 100]
 
     input_shape: [84, 84]
     window_length: 4
@@ -61,7 +62,7 @@
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
     visible: True
     reward_factor: 1
-    min_max: [0, 1000]
+    min_max: [0, 100]
 
     input_shape: [84, 84]
     window_length: 4
