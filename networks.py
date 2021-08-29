@@ -62,35 +62,52 @@ def policy_gradient(input_shape, window_length, action_space, lr):
 def actor_critic(input_shape, window_length, action_space, lr):
     inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length))
 
-    layer1 = layers.Conv2D(32, 8, strides=4)(inputs)
-    layer1 = layers.BatchNormalization()(layer1)
-    layer1 = layers.Activation('relu')(layer1)
+    x = layers.Flatten()(inputs)
+    x = layers.Dense(512, activation="elu", kernel_initializer='he_uniform')(x)
 
-    layer2 = layers.Conv2D(64, 4, strides=2)(layer1)
-    layer2 = layers.BatchNormalization()(layer2)
-    layer2 = layers.Activation('relu')(layer2)
+    action = layers.Dense(action_space, activation="softmax", kernel_initializer='he_uniform')(x)
+    value = layers.Dense(1, kernel_initializer='he_uniform')(x)
 
-    layer3 = layers.Conv2D(64, 3)(layer2)
-    layer3 = layers.BatchNormalization()(layer3)
-    layer3 = layers.Activation('relu')(layer3)
+    actor = keras.Model(inputs=inputs, outputs=action)
+    actor.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=lr))
 
-    layer4 = layers.Flatten()(layer3)
+    critic = keras.Model(inputs=inputs, outputs=value)
+    critic.compile(loss='mse', optimizer=RMSprop(lr=lr))
 
-    layer5 = layers.Dense(64)(layer4)
-    layer5 = layers.BatchNormalization()(layer5)
-    layer5 = layers.Activation('relu')(layer5)
+    return actor, critic
 
-    layer6 = layers.Dense(32)(layer5)
-    layer6 = layers.BatchNormalization()(layer6)
-    layer6 = layers.Activation('relu')(layer6)
-
-    action = layers.Dense(action_space, activation="softmax", kernel_initializer='he_uniform')(layer6)
-    value = layers.Dense(1, activation="linear", kernel_initializer='he_uniform')(layer6)
-
-    Actor = keras.Model(inputs=inputs, outputs=action)
-    Actor.compile(loss='categorical_crossentropy', optimizer=Adam(lr=lr))
-
-    Critic = keras.Model(inputs=inputs, outputs=value)
-    Critic.compile(loss='mse', optimizer=Adam(lr=lr))
-
-    return Actor, Critic
+# def actor_conv(input_shape, window_length, action_space, lr):
+#     inputs = layers.Input(shape=(input_shape[0], input_shape[1], window_length))
+#
+#     layer1 = layers.Conv2D(32, 8, strides=4)(inputs)
+#     layer1 = layers.BatchNormalization()(layer1)
+#     layer1 = layers.Activation('relu')(layer1)
+#
+#     layer2 = layers.Conv2D(64, 4, strides=2)(layer1)
+#     layer2 = layers.BatchNormalization()(layer2)
+#     layer2 = layers.Activation('relu')(layer2)
+#
+#     layer3 = layers.Conv2D(64, 3)(layer2)
+#     layer3 = layers.BatchNormalization()(layer3)
+#     layer3 = layers.Activation('relu')(layer3)
+#
+#     layer4 = layers.Flatten()(layer3)
+#
+#     layer5 = layers.Dense(64, activation="elu", kernel_initializer='he_uniform')(layer4)
+#     layer5 = layers.BatchNormalization()(layer5)
+#     layer5 = layers.Activation('relu')(layer5)
+#
+#     layer6 = layers.Dense(32)(layer5)
+#     layer6 = layers.BatchNormalization()(layer6)
+#     layer6 = layers.Activation('relu')(layer6)
+#
+#     action = layers.Dense(action_space, activation="softmax", kernel_initializer='he_uniform')(layer6)
+#     value = layers.Dense(1, kernel_initializer='he_uniform')(layer5)
+#
+#     Actor = keras.Model(inputs=inputs, outputs=action)
+#     Actor.compile(loss='categorical_crossentropy', optimizer=Adam(lr=lr))
+#
+#     Critic = keras.Model(inputs=inputs, outputs=value)
+#     Critic.compile(loss='mse', optimizer=Adam(lr=lr))
+#
+#     return Actor, Critic
