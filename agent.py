@@ -52,25 +52,23 @@ class DQNAgent:
         else:
             action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = memory.sample()
 
-        # Double Q-Learning, decoupling selection and evaluation of the action seletion with the current DQN model.
         q = model.predict(state_next_sample)
         target_q = model_target.predict(state_next_sample)
 
-        # Build the updated Q-values for the sampled future states - DQN / DDQN
         if self.DOUBLE:
             max_q = tf.argmax(q, axis=1)
             max_actions = tf.one_hot(max_q, self.ACTION_SPACE)
             q_samp = reward_sample + self.GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
         else:
-            q_samp = reward_sample + self.GAMMA * tf.reduce_max(target_q, axis=1)      # Bellman Equation
+            q_samp = reward_sample + self.GAMMA * tf.reduce_max(target_q, axis=1)
 
-        q_samp = q_samp * (1 - terminal_sample) - terminal_sample                       # If final frame set the last value to -1
-        masks = tf.one_hot(action_sample, self.ACTION_SPACE)                            # Create a mask so we only calculate loss on the updated Q-values
+        q_samp = q_samp * (1 - terminal_sample) - terminal_sample
+        masks = tf.one_hot(action_sample, self.ACTION_SPACE)
 
         with tf.GradientTape() as tape:
-            q_values = model(state_sample)                                              # Train the model on the states and updated Q-values
-            q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)              # Apply the masks to the Q-values to get the Q-value for action taken
-            loss = tf.keras.losses.Huber()(q_samp, q_action)                            # Calculate loss between new Q-value and old Q-value
+            q_values = model(state_sample)
+            q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
+            loss = tf.keras.losses.Huber()(q_samp, q_action)
 
         # Backpropagation
         grads = tape.gradient(loss, model.trainable_variables)
@@ -102,7 +100,7 @@ class DQNAgent:
             max_actions = tf.one_hot(max_q, self.ACTION_SPACE)
             q_samp = reward + self.GAMMA * tf.reduce_sum(tf.multiply(target_q, max_actions), axis=1)
         else:
-            q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)      # Bellman Equation
+            q_samp = reward + self.GAMMA * tf.reduce_max(target_q, axis=1)
 
         q_samp = q_samp * (1 - terminal) - terminal
         masks = tf.one_hot(action, self.ACTION_SPACE)
@@ -120,9 +118,9 @@ class DQNAgent:
         episode_reward = 0
 
         while not self.ENV.is_episode_finished():
-            frames = capture(self.ENV, self.SANDBOX, frames)                                                                        # Capture gameplay experience
-            action = self.get_action(state, model)                                                                                  # Predict action Q-values from environment state and take best action
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)           # Apply the sampled action in our environment
+            frames = capture(self.ENV, self.SANDBOX, frames)
+            action = self.get_action(state, model)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
 
             episode_reward += reward
 
@@ -144,9 +142,7 @@ class PolicyAgent:
         self.GAMMA = config['gamma']
         self.STATE_SIZE = (config['window_length'], config['input_shape'][0], config['input_shape'][1])
 
-        self.state_history = []
-        self.action_history = []
-        self.reward_history = []
+        self.state_history, self.action_history, self.reward_history = [], [], []
 
     def act(self, state, model):
         policy = model.predict(state)[0]
@@ -165,39 +161,39 @@ class PolicyAgent:
         sum_reward = 0
         discounted_r = np.zeros_like(self.reward_history)
         for i in reversed(range(0,len(self.reward_history))):
-            if self.reward_history[i] != 0: # reset the sum, since this was a game boundary (pong specific!)
+            if self.reward_history[i] != 0:
                 sum_reward = 0
             sum_reward = sum_reward * self.GAMMA + self.reward_history[i]
             discounted_r[i] = sum_reward
 
-        discounted_r -= np.mean(discounted_r) # normalizing the result
-        discounted_r /= np.std(discounted_r) # divide by standard deviation
+        discounted_r -= np.mean(discounted_r)
+        discounted_r /= np.std(discounted_r)
         return discounted_r
 
     def learn_policy(self, model):
-        states = np.vstack(self.state_history)                                                      # reshape memory to appropriate shape for training
+        states = np.vstack(self.state_history)
         actions = np.vstack(self.action_history)
 
         discounted_r = self.discount_rewards()
 
-        history = model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)                 # training PG network
+        history = model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)
 
-        self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
+        self.state_history, self.action_history, self.reward_history = [], [], []
         return history.history['loss'][0]
 
     def learn_a2c(self, actor, critic):
         episode_length = len(self.state_history)
-        states = np.vstack(self.state_history)                                                      # reshape memory to appropriate shape for training
+        states = np.vstack(self.state_history)
         actions = np.vstack(self.action_history)
 
         values = critic.predict(states)[:, 0]
         discounted_r = self.discount_rewards()
         advantages = discounted_r - values
 
-        actor_history = actor.fit(states, actions, sample_weight=advantages, epochs=1, verbose=0)                 # training PG network
-        critic_history = critic.fit(states, discounted_r, epochs=1, verbose=0)                 # training PG network
+        actor_history = actor.fit(states, actions, sample_weight=advantages, epochs=1, verbose=0)
+        critic_history = critic.fit(states, discounted_r, epochs=1, verbose=0)
 
-        self.state_history, self.action_history, self.reward_history = [], [], []                   # Reset training memory
+        self.state_history, self.action_history, self.reward_history = [], [], []
         return actor_history.history['loss'][0], critic_history.history['loss'][0]
 
     def evaluate(self, model, log_dir, episode_id):
@@ -207,9 +203,9 @@ class PolicyAgent:
         episode_reward = 0
 
         while not terminal:
-            frames = capture(self.ENV, self.SANDBOX, frames)                                                                        # Capture gameplay experience
-            action = self.act(state, model)                                                                                  # Predict action Q-values from environment state and take best action
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action)           # Apply the sampled action in our environment
+            frames = capture(self.ENV, self.SANDBOX, frames)
+            action = self.act(state, model)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action)
 
             episode_reward += reward
             state = state_next
