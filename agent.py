@@ -197,7 +197,8 @@ class PolicyAgent:
         return actor_history.history['loss'][0], critic_history.history['loss'][0]
 
     def evaluate(self, model, log_dir, episode_id):
-        terminal, state = self.SANDBOX.reset(self.ENV)
+        terminal, state, info = self.SANDBOX.reset(self.ENV)
+        prev_info = info
 
         frames = []
         episode_reward = 0
@@ -205,8 +206,9 @@ class PolicyAgent:
         while not terminal:
             frames = capture(self.ENV, self.SANDBOX, frames)
             action = self.act(state, model)
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
 
+            prev_info = info
             episode_reward += reward
             state = state_next
 

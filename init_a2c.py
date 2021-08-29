@@ -3,7 +3,7 @@
 import numpy as np
 import tensorflow as tf
 
-from wrappers.gym_atari import Sandbox
+from wrappers.doom import Sandbox
 from agent import PolicyAgent
 from networks import actor_critic
 from utils import load_config, log_feedback, save
@@ -17,7 +17,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['atari-a2c']
+config = load_config('config.yml')['doom-a2c']
 log_dir = "metrics/"
 
 # -----------------------------
@@ -51,11 +51,12 @@ max_life = 0
 # -----------------------------
 
 print("Training...")
-terminal, state = sandbox.reset(env)
+terminal, state, info = sandbox.reset(env)
+prev_info = info
 
 while True:
     action = agent.act(state, actor)
-    state_next, reward, terminal, info = sandbox.step(env, action)
+    state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
     agent.push(state, action, reward)
 
     if terminal:
@@ -70,6 +71,7 @@ while True:
         episode_reward += reward
         life += 1
 
+    prev_info = info
     state = state_next
     frame_count += 1
 
@@ -97,5 +99,5 @@ while True:
         agent.save(actor, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
-        
+
 env.close()

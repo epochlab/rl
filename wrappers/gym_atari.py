@@ -40,9 +40,10 @@ class Sandbox:
     def reset(self, env):
         terminal = False
         frame = env.reset()
+        info = None
         for _ in range(self.WINDOW_LENGTH):
             state = self.framestack(frame)
-        return terminal, state
+        return terminal, state, info
 
     def step(self, env, action):
         if self.VISIBLE:

@@ -17,6 +17,8 @@ class Sandbox:
         self.VISIBLE = config['visible']
         self.FACTOR = config['reward_factor']
 
+        self.STACK = np.zeros((config['input_shape'][0], config['input_shape'][1], config['window_length']))
+
     def build_env(self, config_path, AOV=False):
         env = vizdoom.DoomGame()
         env.load_config(config_path)
@@ -44,41 +46,54 @@ class Sandbox:
         action_space = env.get_available_buttons_size()
         return env, action_space
 
-    def preprocess(self, frame, size):
+    def preprocess(self, frame):
         frame = np.rollaxis(frame, 0, 3)
         frame = skimage.color.rgb2gray(frame)
-        frame = skimage.transform.resize(frame, size)
-
-        if self.GRADE:
-            frame -= np.min(frame)
-            frame *= (1/np.max(frame))
-
+        frame = skimage.transform.resize(frame, self.INPUT_SHAPE)
         return frame
 
-    def framestack(self, stack, state, new_episode):
-        frame = self.preprocess(state, self.INPUT_SHAPE)
-        if new_episode:
-            for _ in range(4):
-                stack.append(frame)
-        else:
-            stack.append(frame)
+    # def framestack(self, stack, state, new_episode):
+    #     frame = self.preprocess(state, self.INPUT_SHAPE)
+    #     if new_episode:
+    #         for _ in range(4):
+    #             stack.append(frame)
+    #     else:
+    #         stack.append(frame)
+    #
+    #     stack_state = np.stack(stack, axis=2)
+    #     return stack, stack_state
 
-        stack_state = np.stack(stack, axis=2)
-        return stack, stack_state
+    def framestack(self, state):
+        frame = self.preprocess(state)
+        frame = np.array(frame).astype(np.float32) / 255.0
+        self.STACK = np.roll(self.STACK, 1, axis=2)
+        self.STACK[:,:,0] = frame
+        return np.expand_dims(self.STACK, axis=0)
+
+    # def reset(self, env):
+    #     env.new_episode()
+    #     state = env.get_state()
+    #     info = state.game_variables
+    #     prev_info = info
+    #
+    #     frame = state.screen_buffer
+    #     stack = deque([np.zeros(self.INPUT_SHAPE, dtype=int) for i in range(self.WINDOW_LENGTH)], maxlen=4)
+    #     stack, stack_state = self.framestack(stack, frame, True)
+    #     return info, prev_info, stack, stack_state
 
     def reset(self, env):
         env.new_episode()
+        terminal = False
         state = env.get_state()
         info = state.game_variables
-        prev_info = info
 
         frame = state.screen_buffer
-        stack = deque([np.zeros(self.INPUT_SHAPE, dtype=int) for i in range(self.WINDOW_LENGTH)], maxlen=4)
-        stack, stack_state = self.framestack(stack, frame, True)
-        return info, prev_info, stack, stack_state
+        for _ in range(self.WINDOW_LENGTH):
+            state = self.framestack(frame)
+        return terminal, state, info
 
-    def step(self, env, stack, prev_info, action_idx, action_space):
-        action = np.zeros([action_space])
+    def step(self, env, action_idx, prev_info):
+        action = np.zeros([env.get_available_buttons_size()])
         action[action_idx] = 1
         action = action.astype(int)
 
@@ -96,10 +111,10 @@ class Sandbox:
             info = state.game_variables
 
         next_frame = state.screen_buffer
-        stack, next_stack_state = self.framestack(stack, next_frame, False)
+        next_state = self.framestack(next_frame)
         info = state.game_variables
         reward = self.shape_reward(reward, self.FACTOR, info, prev_info)
-        return next_stack_state, reward, terminal, info
+        return next_state, reward, terminal, info
 
     def shape_reward(self, reward, factor, info, prev_info):
         reward *= factor
