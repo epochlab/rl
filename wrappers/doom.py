@@ -2,11 +2,9 @@
 
 import vizdoom
 import numpy as np
-import matplotlib.pyplot as plt
 
 import skimage
 from skimage import transform, color
-from collections import deque
 
 class Sandbox:
     def __init__(self, config):
@@ -52,34 +50,12 @@ class Sandbox:
         frame = skimage.transform.resize(frame, self.INPUT_SHAPE)
         return frame
 
-    # def framestack(self, stack, state, new_episode):
-    #     frame = self.preprocess(state, self.INPUT_SHAPE)
-    #     if new_episode:
-    #         for _ in range(4):
-    #             stack.append(frame)
-    #     else:
-    #         stack.append(frame)
-    #
-    #     stack_state = np.stack(stack, axis=2)
-    #     return stack, stack_state
-
     def framestack(self, state):
         frame = self.preprocess(state)
         frame = np.array(frame).astype(np.float32) / 255.0
         self.STACK = np.roll(self.STACK, 1, axis=2)
         self.STACK[:,:,0] = frame
         return self.STACK
-
-    # def reset(self, env):
-    #     env.new_episode()
-    #     state = env.get_state()
-    #     info = state.game_variables
-    #     prev_info = info
-    #
-    #     frame = state.screen_buffer
-    #     stack = deque([np.zeros(self.INPUT_SHAPE, dtype=int) for i in range(self.WINDOW_LENGTH)], maxlen=4)
-    #     stack, stack_state = self.framestack(stack, frame, True)
-    #     return info, prev_info, stack, stack_state
 
     def reset(self, env):
         env.new_episode()
