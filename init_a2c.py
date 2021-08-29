@@ -96,6 +96,6 @@ while True:
     if running_reward == config['min_max'][1]:
         agent.save(actor, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
-        breakz
-
+        break
+        
 env.close()
