@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from wrappers.gym_atari import Sandbox
 from agent import PolicyAgent
-from networks import actor_network, critic_network
+from networks import actor_critic
 from utils import load_config, log_feedback, save
 
 # -----------------------------
@@ -24,11 +24,9 @@ log_dir = "metrics/"
 
 sandbox = Sandbox(config)
 env, action_space = sandbox.build_env(config['env_name'])
-value_size = 1
 
-actor = actor_network(config['input_shape'], config['window_length'], action_space, config['learning_rate'])
-critic = critic_network(config['input_shape'], config['window_length'], value_size, config['learning_rate'])
-# actor.summary()
+actor, critic = actor_critic(config['input_shape'], config['window_length'], action_space, config['learning_rate'])
+actor.summary()
 
 agent = PolicyAgent(config, sandbox, env, action_space)
 
