@@ -112,7 +112,8 @@ class DQNAgent:
         return td_error
 
     def evaluate(self, model, log_dir, episode_id):
-        info, prev_info, stack, state = self.SANDBOX.reset(self.ENV)
+        terminal, state, info = self.SANDBOX.reset(self.ENV)
+        prev_info = info
 
         frames = []
         episode_reward = 0
@@ -120,7 +121,7 @@ class DQNAgent:
         while not self.ENV.is_episode_finished():
             frames = capture(self.ENV, self.SANDBOX, frames)
             action = self.get_action(state, model)
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
 
             episode_reward += reward
 
@@ -132,6 +133,10 @@ class DQNAgent:
 
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
+
+    def save(self, model, model_target, outdir):
+        model.save(outdir + '/model.h5')
+        model_target.save(outdir + '/model_target.h5')
 
 class PolicyAgent:
     def __init__(self, config, sandbox, env, action_space):
