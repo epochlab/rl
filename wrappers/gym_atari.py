@@ -45,7 +45,7 @@ class Sandbox:
             state = self.framestack(frame)
         return terminal, state, info
 
-    def step(self, env, action):
+    def step(self, env, action, _):
         if self.VISIBLE:
             env.render()
 
@@ -54,7 +54,7 @@ class Sandbox:
         reward = self.shape_reward(reward)
 
         if terminal:
-            _, state = self.reset(env)
+            _, state, info = self.reset(env)
             terminal = True
 
         return next_state, reward, terminal, info
