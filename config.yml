@@ -1,4 +1,37 @@
 ---
+  atari-dqn:
+    env_name: "PongDeterministic-v4"
+    visible: True
+    reward_factor: 1
+    min_max: [-21, 21]
+
+    input_shape: [84, 84]
+    window_length: 4
+    fps: 4
+    grade: True
+
+    double: True
+    fixed: False
+    use_per: False
+
+    memory_capacity: 1000000
+    memory_alpha: 0.6
+    memory_eps: 0.01
+
+    learning_rate: 0.0001
+    batch_size: 32
+    gamma: 0.99
+    update_after_actions: 4
+    update_target_network: 10000
+    tau: 0.08
+
+    epsilon: 1.0
+    epsilon_random_frames: 50000
+    epsilon_greedy_frames: 1000000
+    epsilon_min: 0.1
+    epsilon_max: 1.0
+    epsilon_annealer: (epsilon_max - epsilon_min)
+
   doom-dqn:
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/deadly_corridor.cfg"
     visible: True
