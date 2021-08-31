@@ -6,8 +6,6 @@ import numpy as np
 import skimage
 from skimage import transform, color
 
-from collections import deque
-
 class Sandbox:
     def __init__(self, config):
         self.INPUT_SHAPE = config['input_shape']
@@ -50,36 +48,14 @@ class Sandbox:
         frame = np.rollaxis(frame, 0, 3)
         frame = skimage.color.rgb2gray(frame)
         frame = skimage.transform.resize(frame, self.INPUT_SHAPE)
+        frame = np.array(frame).astype(np.float32)
         return frame
-
-    # def framestack(self, stack, state, new_episode):
-    #     frame = self.preprocess(state)
-    #     if new_episode:
-    #         for _ in range(4):
-    #             stack.append(frame)
-    #     else:
-    #         stack.append(frame)
-    #
-    #     stack_state = np.stack(stack, axis=2)
-    #     return stack, stack_state
 
     def framestack(self, state):
         frame = self.preprocess(state)
-        frame = np.array(frame).astype(np.float32)
         self.STACK = np.roll(self.STACK, 1, axis=2)
         self.STACK[:,:,0] = frame
         return self.STACK
-
-    # def reset(self, env):
-    #     env.new_episode()
-    #     state = env.get_state()
-    #     info = state.game_variables
-    #     prev_info = info
-    #
-    #     frame = state.screen_buffer
-    #     stack = deque([np.zeros(self.INPUT_SHAPE, dtype=int) for i in range(self.WINDOW_LENGTH)], maxlen=4)
-    #     stack, stack_state = self.framestack(stack, frame, True)
-    #     return info, stack, stack_state
 
     def reset(self, env):
         env.new_episode()
@@ -91,30 +67,6 @@ class Sandbox:
         for _ in range(self.WINDOW_LENGTH):
             state = self.framestack(frame)
         return terminal, state, info
-
-    # def step(self, env, stack, prev_info, action_idx, action_space):
-    #     action = np.zeros([env.get_available_buttons_size()])
-    #     action[action_idx] = 1
-    #     action = action.astype(int)
-    #
-    #     env.set_action(action.tolist())
-    #     env.advance_action(self.FPS)
-    #
-    #     state = env.get_state()
-    #     terminal = env.is_episode_finished()
-    #     reward = env.get_last_reward()
-    #
-    #     if terminal:
-    #         env.new_episode()
-    #         state = env.get_state()
-    #         next_frame = state.screen_buffer
-    #         info = state.game_variables
-    #
-    #     next_frame = state.screen_buffer
-    #     stack, next_stack_state = self.framestack(stack, next_frame, False)
-    #     info = state.game_variables
-    #     reward = self.shape_reward(reward, self.FACTOR, info, prev_info)
-    #     return next_stack_state, reward, terminal, info
 
     def step(self, env, action_idx, prev_info):
         action = np.zeros([env.get_available_buttons_size()])
@@ -135,7 +87,6 @@ class Sandbox:
             info = state.game_variables
 
         next_frame = state.screen_buffer
-        # stack, next_stack_state = self.framestack(stack, next_frame, False)
         next_state = self.framestack(next_frame)
         info = state.game_variables
         reward = self.shape_reward(reward, self.FACTOR, info, prev_info)

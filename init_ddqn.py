@@ -61,12 +61,10 @@ max_life = 0
 
 print("Training...")
 terminal, state, info = sandbox.reset(env)
-# info, stack, state = sandbox.reset(env)
 prev_info = info
 
 while True:
     action = agent.exploration(frame_count, state, model)
-    # state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
     state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
 
     if config['use_per']:

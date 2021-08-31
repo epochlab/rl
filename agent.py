@@ -110,7 +110,6 @@ class DQNAgent:
         return td_error
 
     def evaluate(self, model, log_dir, episode_id):
-        # info, stack, state = self.SANDBOX.reset(self.ENV)
         terminal, state, info = self.SANDBOX.reset(self.ENV)
         prev_info = info
 
@@ -120,7 +119,6 @@ class DQNAgent:
         while True:
             frames = capture(self.ENV, self.SANDBOX, frames)
             action = self.get_action(state, model)
-            # state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
             state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
 
             episode_reward += reward
