@@ -38,8 +38,8 @@ class Sandbox:
         return self.STACK
 
     def reset(self, env):
-        terminal = False
         frame = env.reset()
+        terminal = False
         info = None
         for _ in range(self.WINDOW_LENGTH):
             state = self.framestack(frame)
