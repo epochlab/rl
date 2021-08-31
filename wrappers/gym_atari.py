@@ -28,11 +28,11 @@ class Sandbox:
             frame[frame >= 0.5] = 255
 
         frame = skimage.transform.resize(frame, self.INPUT_SHAPE)
+        frame = np.array(frame).astype(np.float32) / 255.0
         return frame
 
     def framestack(self, state):
         frame = self.preprocess(state)
-        frame = np.array(frame).astype(np.float32) / 255.0
         self.STACK = np.roll(self.STACK, 1, axis=2)
         self.STACK[:,:,0] = frame
         return self.STACK
@@ -45,7 +45,7 @@ class Sandbox:
             state = self.framestack(frame)
         return terminal, state, info
 
-    def step(self, env, action, _):
+    def step(self, env, action, _): # 3rd input used in Doom (prev_info)
         if self.VISIBLE:
             env.render()
 
