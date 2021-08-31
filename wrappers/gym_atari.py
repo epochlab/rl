@@ -35,7 +35,7 @@ class Sandbox:
         frame = np.array(frame).astype(np.float32) / 255.0
         self.STACK = np.roll(self.STACK, 1, axis=2)
         self.STACK[:,:,0] = frame
-        return np.expand_dims(self.STACK, axis=0)
+        return self.STACK
 
     def reset(self, env):
         terminal = False
