@@ -45,7 +45,6 @@ class DQNAgent:
         return action_idx
 
     def learn(self, memory, model, model_target, optimizer):
-        # Sample from replay buffer
         if self.USE_PER:
             samples, indices, priorities = memory.sample(self.BATCH_SIZE)
             action_sample, state_sample, state_next_sample, reward_sample, terminal_sample = samples
@@ -70,7 +69,6 @@ class DQNAgent:
             q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
             loss = tf.keras.losses.Huber()(q_samp, q_action)
 
-        # Backpropagation
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
@@ -112,16 +110,18 @@ class DQNAgent:
         return td_error
 
     def evaluate(self, model, log_dir, episode_id):
-        terminal, state, info = self.SANDBOX.reset(self.ENV)
+        info, stack, state = self.SANDBOX.reset(self.ENV)
+        # terminal, state, info = self.SANDBOX.reset(self.ENV)
         prev_info = info
 
         frames = []
         episode_reward = 0
 
-        while not self.ENV.is_episode_finished():
+        while True:
             frames = capture(self.ENV, self.SANDBOX, frames)
             action = self.get_action(state, model)
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
+            # state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
 
             episode_reward += reward
 
