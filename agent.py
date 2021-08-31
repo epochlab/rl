@@ -110,8 +110,8 @@ class DQNAgent:
         return td_error
 
     def evaluate(self, model, log_dir, episode_id):
-        info, stack, state = self.SANDBOX.reset(self.ENV)
-        # terminal, state, info = self.SANDBOX.reset(self.ENV)
+        # info, stack, state = self.SANDBOX.reset(self.ENV)
+        terminal, state, info = self.SANDBOX.reset(self.ENV)
         prev_info = info
 
         frames = []
@@ -120,8 +120,8 @@ class DQNAgent:
         while True:
             frames = capture(self.ENV, self.SANDBOX, frames)
             action = self.get_action(state, model)
-            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
-            # state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
+            # state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, stack, prev_info, action, self.ACTION_SPACE)
+            state_next, reward, terminal, info = self.SANDBOX.step(self.ENV, action, prev_info)
 
             episode_reward += reward
 
@@ -187,7 +187,7 @@ class PolicyAgent:
         return history.history['loss'][0]
 
     def learn_a2c(self, actor, critic):
-        episode_length = len(self.state_history)
+        # episode_length = len(self.state_history)
         states = np.vstack(self.state_history)
         actions = np.vstack(self.action_history)
 

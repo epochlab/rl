@@ -60,13 +60,14 @@ max_life = 0
 # -----------------------------
 
 print("Training...")
-info, stack, state = sandbox.reset(env)
+terminal, state, info = sandbox.reset(env)
+# info, stack, state = sandbox.reset(env)
 prev_info = info
 
 while True:
     action = agent.exploration(frame_count, state, model)
-    state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
-    # state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
+    # state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
+    state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
 
     if config['use_per']:
         event = (action, state, state_next, reward, terminal)
@@ -87,7 +88,6 @@ while True:
 
     prev_info = info
     state = state_next
-    frame_count += 1
 
     if frame_count % config['update_after_actions'] == 0 and frame_count > config['batch_size']:
         loss = agent.learn(memory, model, model_target, optimizer)
@@ -100,18 +100,13 @@ while True:
     if not config['use_per']:
         memory.limit()
 
-    if terminal:
-        print("Frame: {}, Episode: {}, Reward: {}, Loss: {}, Max Life: {}".format(frame_count, episode_count, running_reward, loss, max_life))
-
     episode_reward_history.append(episode_reward)
     if len(episode_reward_history) > 100:
         del episode_reward_history[:1]
     running_reward = np.mean(episode_reward_history)
 
-    if terminal and running_reward > (min_reward + 0.1):
-        agent.save(model, model_target, log_dir + timestamp)
-        eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
-        min_reward = running_reward
+    if terminal:
+        print("Frame: {}, Episode: {}, Reward: {}, Loss: {}, Max Life: {}".format(frame_count, episode_count, running_reward, loss, max_life))
 
     with summary_writer.as_default():
         tf.summary.scalar('loss', loss, step=episode_count)
@@ -119,9 +114,16 @@ while True:
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
         tf.summary.scalar('max_life', max_life, step=episode_count)
 
+    if terminal and running_reward > (min_reward + 0.1):
+        agent.save(model, model_target, log_dir + timestamp)
+        eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
+        min_reward = running_reward
+
     if running_reward == config['min_max'][1]:
         agent.save(model, model_target, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
+
+    frame_count += 1
 
 env.close()
