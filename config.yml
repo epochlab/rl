@@ -65,26 +65,28 @@
     epsilon_max: 1.0
     epsilon_annealer: (epsilon_max - epsilon_min)
 
-  atari-policy:
-    env_name: "PongDeterministic-v4"
+  pong-policy:
+    env_name: "PongNoFrameskip-v4"
     visible: True
     min_max: [-21, 21]
 
     input_shape: [84, 84]
     window_length: 4
+    fps: 4
     grade: True
 
     learning_rate: 0.000025
     gamma: 0.99
     update_after_actions: 0
 
-  atari-a2c:
-    env_name: "PongDeterministic-v4"
+  pong-a2c:
+    env_name: "PongNoFrameskip-v4"
     visible: True
     min_max: [-21, 21]
 
     input_shape: [84, 84]
     window_length: 4
+    fps: 4
     grade: True
 
     learning_rate: 0.000025
