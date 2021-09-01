@@ -82,9 +82,6 @@ class Sandbox:
         if self.VISIBLE:
             env.render()
 
-        if prev_info == None:
-            action = 1
-
         total_reward = 0.0
         buffer = np.zeros((2,) + env.observation_space.shape, dtype=np.uint8)
         for i in range(self.FPS):

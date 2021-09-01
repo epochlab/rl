@@ -1,5 +1,5 @@
 ---
-  atari-dqn:
+  pong-dqn:
     env_name: "PongNoFrameskip-v4"
     visible: True
     reward_factor: 1
