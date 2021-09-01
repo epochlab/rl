@@ -1,6 +1,6 @@
 ---
   atari-dqn:
-    env_name: "PongDeterministic-v4"
+    env_name: "PongNoFrameskip-v4"
     visible: True
     reward_factor: 1
     min_max: [-21, 21]

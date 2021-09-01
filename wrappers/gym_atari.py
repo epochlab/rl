@@ -12,6 +12,8 @@ class Sandbox:
         self.WINDOW_LENGTH = config['window_length']
         self.GRADE = config['grade']
         self.VISIBLE = config['visible']
+
+        self.FPS = config['fps']
         self.STACK = np.zeros((config['input_shape'][0], config['input_shape'][1], config['window_length']))
 
     def build_env(self, env_name):
@@ -45,19 +47,37 @@ class Sandbox:
             state = self.framestack(frame)
         return terminal, state, info
 
+    # def step(self, env, action, _): # 3rd input used in Doom (prev_info)
+    #     if self.VISIBLE:
+    #         env.render()
+    #
+    #     next_state, reward, terminal, info = env.step(action)
+    #     next_state = self.framestack(next_state)
+    #     reward = self.shape_reward(reward)
+    #
+    #     if terminal:
+    #         _, state, info = self.reset(env)
+    #         terminal = True
+    #
+    #     return next_state, reward, terminal, info
+
     def step(self, env, action, _): # 3rd input used in Doom (prev_info)
         if self.VISIBLE:
             env.render()
 
-        next_state, reward, terminal, info = env.step(action)
+        total_reward = 0.0
+        for i in range(self.FPS):
+            next_state, reward, terminal, info = env.step(action)
+            total_reward += reward
+            if terminal:
+                _, state, info = self.reset(env)
+                terminal = True
+                break
+
         next_state = self.framestack(next_state)
-        reward = self.shape_reward(reward)
+        total_reward = self.shape_reward(total_reward)
 
-        if terminal:
-            _, state, info = self.reset(env)
-            terminal = True
-
-        return next_state, reward, terminal, info
+        return next_state, total_reward, terminal, info
 
     def shape_reward(self, reward):
         reward = np.sign(reward)
