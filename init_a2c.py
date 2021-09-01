@@ -73,7 +73,6 @@ while True:
 
     prev_info = info
     state = state_next
-    frame_count += 1
 
     episode_reward_history.append(episode_reward)
     if len(episode_reward_history) > 100:
@@ -99,5 +98,7 @@ while True:
         agent.save(actor, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
+
+    frame_count += 1
 
 env.close()

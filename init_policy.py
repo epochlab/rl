@@ -56,7 +56,7 @@ prev_info = info
 
 while True:
     action = agent.act(state, model)
-    state_next, reward, terminal, info = sandbox.step(env, action)
+    state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
     agent.push(state, action, reward)
 
     if terminal:
@@ -73,7 +73,6 @@ while True:
 
     prev_info = info
     state = state_next
-    frame_count += 1
 
     episode_reward_history.append(episode_reward)
     if len(episode_reward_history) > 100:
@@ -98,5 +97,7 @@ while True:
         agent.save(model, log_dir + timestamp)
         print("Solved at episode {}!".format(episode_count))
         break
+
+    frame_count += 1
 
 env.close()
