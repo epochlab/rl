@@ -12,7 +12,6 @@ class Sandbox:
         self.WINDOW_LENGTH = config['window_length']
         self.GRADE = config['grade']
         self.VISIBLE = config['visible']
-
         self.FPS = config['fps']
         self.STACK = np.zeros((config['input_shape'][0], config['input_shape'][1], config['window_length']))
 
@@ -61,22 +60,47 @@ class Sandbox:
     #
     #     return next_state, reward, terminal, info
 
-    def step(self, env, action, _): # 3rd input used in Doom (prev_info)
+    # def step(self, env, action, _): # 3rd input used in Doom (prev_info)
+    #     if self.VISIBLE:
+    #         env.render()
+    #
+    #     total_reward = 0.0
+    #     for i in range(self.FPS):
+    #         next_state, reward, terminal, info = env.step(action)
+    #         total_reward += reward
+    #         if terminal:
+    #             _, state, info = self.reset(env)
+    #             terminal = True
+    #             break
+    #
+    #     next_state = self.framestack(next_state)
+    #     total_reward = self.shape_reward(total_reward)
+    #
+    #     return next_state, total_reward, terminal, info
+
+    def step(self, env, action, prev_info):
         if self.VISIBLE:
             env.render()
 
+        if prev_info == None:
+            action = 1
+
         total_reward = 0.0
+        buffer = np.zeros((2,) + env.observation_space.shape, dtype=np.uint8)
         for i in range(self.FPS):
             next_state, reward, terminal, info = env.step(action)
+            if i == self.FPS - 2: buffer[0] = next_state
+            if i == self.FPS - 1: buffer[1] = next_state
             total_reward += reward
             if terminal:
                 _, state, info = self.reset(env)
                 terminal = True
                 break
 
-        next_state = self.framestack(next_state)
-        total_reward = self.shape_reward(total_reward)
+        max_frame = buffer.max(axis=0)
+        next_state = self.framestack(max_frame)
 
+        total_reward = self.shape_reward(total_reward)
         return next_state, total_reward, terminal, info
 
     def shape_reward(self, reward):
@@ -86,3 +110,7 @@ class Sandbox:
     def view_human(self, env):
         frame = env.render(mode='rgb_array')
         return frame
+
+# import imageio
+# frame = np.uint8(frame)
+# imageio.imsave('test.png', frame)
