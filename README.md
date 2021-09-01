@@ -6,9 +6,9 @@
 Abstract: *Reinforcement learning is the field of computer science concerned with how agents, through trial and error, learn to operate within an environment in order to maximize a reward signal.*
 
 ### Build
-- Deep Q-Network: DQN, DoubleDQN, DeulingDQN, Prioritized Experience Replay, Fixed & Soft Targets.
-- Policy Gradient: REINFORCE, Advantage Actor-Critic (A2C), Asynchronous Advantage Actor Critic (A3C).
-- Vizualisation: Engine Buffers, Attention Window, Neural Heatmap, Q-Score, Confidence Plot.
+- Deep Q-Network: DQN | DoubleDQN | DeulingDQN | Prioritized Experience Replay | Fixed & Soft Targets
+- Policy Gradient: REINFORCE | Advantage Actor-Critic (A2C) | Asynchronous Advantage Actor Critic (A3C)
+- Vizualisation: Engine Buffers | Attention Window | Neural Heatmap | Q-Score | Confidence Plot
 
 ### Packages
 `gym` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib`
