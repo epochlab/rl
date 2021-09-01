@@ -107,7 +107,9 @@ def plot_value(values, counter, depth):
 
 def witness(env, action_space, model):
     print("Witnessing...", log_dir)
-    info, prev_info, stack, state = sandbox.reset(env)
+    terminal, state, info = sandbox.reset(env)
+    prev_info = info
+
     frame_count = 0
 
     human_buf = []
@@ -143,7 +145,7 @@ def witness(env, action_space, model):
         graph = plot_value(values, counter, 50)
         graph_buf.append(graph)
 
-        state_next, reward, terminal, info = sandbox.step(env, stack, prev_info, action, action_space)
+        state_next, reward, terminal, info = sandbox.step(env, action, prev_info)
 
         prev_info = info
         state = state_next
@@ -166,7 +168,7 @@ def witness(env, action_space, model):
 sandbox = Sandbox(config)
 
 env, action_space = sandbox.build_env(config['env_name'], True)
-info, prev_info, stack, state = sandbox.reset(env)
+terminal, state, info = sandbox.reset(env)
 
 agent = Agent(config, sandbox, env, action_space)
 model = load(log_dir)
