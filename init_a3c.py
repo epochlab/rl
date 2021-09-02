@@ -54,6 +54,8 @@ def execute():
     life = 0
     max_life = 0
 
+    # -----------------------------
+
     print("Training...")
     terminal, state, info, image_memory = sandbox.async_reset(env)
     prev_info = info
@@ -104,7 +106,6 @@ def async_train(n_threads):
     threads = [threading.Thread(target=train_threading, daemon=True, args=(envs[i], i)) for i in range(n_threads-1)]
 
     for t in threads:
-        print(t)
         time.sleep(2)
         t.start()
 
@@ -130,6 +131,8 @@ def train_threading(env, thread):
     max_life = 0
 
     lock = Lock()
+
+    # -----------------------------
 
     print("Training...")
     terminal, state, info, image_memory = sandbox.async_reset(env)
