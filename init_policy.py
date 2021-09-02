@@ -6,7 +6,7 @@ import tensorflow as tf
 from wrappers.gym_atari import Sandbox
 from agent import PolicyAgent
 from networks import policy_gradient
-from utils import load_config, log_feedback, save
+from utils import load_config, log_feedback
 
 # -----------------------------
 
@@ -17,7 +17,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['atari-policy']
+config = load_config('config.yml')['pong-policy']
 log_dir = "metrics/"
 
 # -----------------------------
