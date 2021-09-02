@@ -11,7 +11,7 @@ Abstract: *Reinforcement learning is the field of computer science concerned wit
 - Vizualisation: Engine Buffers | Attention Window | Neural Heatmap | Q-Score | Confidence Plot
 
 ### Packages
-`gym` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib`
+`gym` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib` `yaml`
 
 ### Environments
 - OpenAI Gym
