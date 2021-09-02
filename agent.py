@@ -145,10 +145,12 @@ class PolicyAgent:
         self.GAMMA = config['gamma']
         self.STATE_SIZE = (config['window_length'], config['input_shape'][0], config['input_shape'][1])
 
-        self.state_history, self.action_history, self.reward_history = [], [], []
+        self.action_history, self.state_history, self.reward_history = [], [], []
 
     def act(self, state, model):
-        policy = model.predict(state)[0]
+        state_tensor = tf.convert_to_tensor(state)
+        state_tensor = tf.expand_dims(state_tensor, 0)
+        policy = model.predict(state_tensor)[0]
         action = np.random.choice(self.ACTION_SPACE, p=policy)
         return action
 
@@ -156,8 +158,8 @@ class PolicyAgent:
         action = np.zeros([self.ACTION_SPACE])
         action[action_idx] = 1
 
-        self.state_history.append(state)
         self.action_history.append(action)
+        self.state_history.append(np.expand_dims(state, axis=0))
         self.reward_history.append(reward)
 
     def discount_rewards(self):
@@ -174,18 +176,17 @@ class PolicyAgent:
         return discounted_r
 
     def learn_policy(self, model):
-        states = np.vstack(self.state_history)
         actions = np.vstack(self.action_history)
+        states = np.vstack(self.state_history)
 
         discounted_r = self.discount_rewards()
 
         history = model.fit(states, actions, sample_weight=discounted_r, epochs=1, verbose=0)
 
-        self.state_history, self.action_history, self.reward_history = [], [], []
+        self.action_history, self.state_history, self.reward_history = [], [], []
         return history.history['loss'][0]
 
     def learn_a2c(self, actor, critic):
-        # episode_length = len(self.state_history)
         states = np.vstack(self.state_history)
         actions = np.vstack(self.action_history)
 
@@ -196,7 +197,7 @@ class PolicyAgent:
         actor_history = actor.fit(states, actions, sample_weight=advantages, epochs=1, verbose=0)
         critic_history = critic.fit(states, discounted_r, epochs=1, verbose=0)
 
-        self.state_history, self.action_history, self.reward_history = [], [], []
+        self.action_history, self.state_history, self.reward_history = [], [], []
         return actor_history.history['loss'][0], critic_history.history['loss'][0]
 
     def evaluate(self, model, log_dir, episode_id):
