@@ -101,9 +101,10 @@ def execute():
 # -----------------------------
 
 def async_train(n_threads):
-    envs = [sandbox.build_env(config['env_name'])[0] for i in range(n_threads-1)]
+    env.close()
+    envs = [sandbox.build_env(config['env_name'])[0] for i in range(n_threads)]
 
-    threads = [threading.Thread(target=train_threading, daemon=True, args=(envs[i], i)) for i in range(n_threads-1)]
+    threads = [threading.Thread(target=train_threading, daemon=True, args=(envs[i], i)) for i in range(n_threads)]
 
     for t in threads:
         time.sleep(2)
@@ -150,8 +151,9 @@ def train_threading(env, thread):
         if terminal:
             lock.acquire()
             a_loss, c_loss = agent.learn_a3c(actor, critic, actions, states, rewards)
-            actions, states, rewards = [], [], []
             lock.release()
+
+            actions, states, rewards = [], [], []
 
             episode_reward = 0
             episode_count += 1
@@ -173,6 +175,13 @@ def train_threading(env, thread):
         if terminal:
             print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward, a_loss, c_loss, max_life))
 
+        with summary_writer.as_default():
+            tf.summary.scalar('a_loss', a_loss, step=episode_count)
+            tf.summary.scalar('c_loss', c_loss, step=episode_count)
+            tf.summary.scalar('running_reward', running_reward, step=episode_count)
+            tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
+            tf.summary.scalar('max_life', max_life, step=episode_count)
+
         frame_count += 1
 
     env.close()
@@ -180,4 +189,4 @@ def train_threading(env, thread):
 # -----------------------------
 
 # execute()
-async_train(n_threads=5)
+async_train(n_threads=3)
