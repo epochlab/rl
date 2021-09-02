@@ -6,7 +6,7 @@ import tensorflow as tf
 from wrappers.doom import Sandbox
 from agent import PolicyAgent
 from networks import actor_critic
-from utils import load_config, log_feedback, save
+from utils import load_config, log_feedback
 
 # -----------------------------
 
