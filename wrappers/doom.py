@@ -57,6 +57,16 @@ class Sandbox:
         self.STACK[:,:,0] = frame
         return self.STACK
 
+    def async_stack(self, state, image_memory):
+        frame = self.preprocess(state)
+
+        if image_memory.shape == (1,*self.STACK):
+            image_memory = np.squeeze(image_memory)
+
+        image_memory = np.roll(image_memory, 1, axis=2)
+        image_memory[:,:,0] = frame
+        return image_memory
+
     def reset(self, env):
         env.new_episode()
         terminal = False
@@ -67,6 +77,23 @@ class Sandbox:
         for _ in range(self.WINDOW_LENGTH):
             state = self.framestack(frame)
         return terminal, state, info
+
+    def async_reset(self, env):
+        image_memory = self.STACK
+        env.new_episode()
+        terminal = False
+        state = env.get_state()
+        info = state.game_variables
+
+        frame = state.screen_buffer
+        for _ in range(self.WINDOW_LENGTH):
+            state = self.async_stack(frame, image_memory)
+        return terminal, state, info, image_memory
+
+    def one_hot(self, env, action_idx):
+        action = np.zeros([env.get_available_buttons_size()])
+        action[action_idx] = 1
+        return action
 
     def step(self, env, action_idx, prev_info):
         action = np.zeros([env.get_available_buttons_size()])
@@ -88,6 +115,30 @@ class Sandbox:
 
         next_frame = state.screen_buffer
         next_state = self.framestack(next_frame)
+        info = state.game_variables
+        reward = self.shape_reward(reward, self.FACTOR, info, prev_info)
+        return next_state, reward, terminal, info
+
+    def async_step(self, env, action_idx, prev_info, image_memory):
+        action = np.zeros([env.get_available_buttons_size()])
+        action[action_idx] = 1
+        action = action.astype(int)
+
+        env.set_action(action.tolist())
+        env.advance_action(self.FPS)
+
+        state = env.get_state()
+        terminal = env.is_episode_finished()
+        reward = env.get_last_reward()
+
+        if terminal:
+            env.new_episode()
+            state = env.get_state()
+            next_frame = state.screen_buffer
+            info = state.game_variables
+
+        next_frame = state.screen_buffer
+        next_state = self.async_stack(next_frame, image_memory)
         info = state.game_variables
         reward = self.shape_reward(reward, self.FACTOR, info, prev_info)
         return next_state, reward, terminal, info
