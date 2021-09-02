@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from wrappers.doom import Sandbox
-from agent import Agent
+from agent import DQNAgent
 from networks import dqn, dueling_dqn
 from utils import load_config, render_gif, load
 
@@ -25,7 +25,7 @@ print("Eager mode:", tf.executing_eagerly())
 # -----------------------------
 
 config = load_config('config.yml')['doom-dqn']
-log_dir = 'metrics/20210821-025324/'
+log_dir = 'metrics/20210902-021628/'
 
 dim = (640, 480)
 
@@ -170,7 +170,7 @@ sandbox = Sandbox(config)
 env, action_space = sandbox.build_env(config['env_name'], True)
 terminal, state, info = sandbox.reset(env)
 
-agent = Agent(config, sandbox, env, action_space)
+agent = DQNAgent(config, sandbox, env, action_space)
 model = load(log_dir)
 
 # -----------------------------
