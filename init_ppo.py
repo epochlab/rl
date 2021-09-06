@@ -93,7 +93,7 @@ def execute():
         running_reward = np.mean(episode_reward_history)
 
         if terminal:
-            print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward, a_loss, c_loss, max_life))
+            print("Frame: {}, Episode: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, running_reward, a_loss, c_loss, max_life))
 
         with summary_writer.as_default():
             tf.summary.scalar('a_loss', a_loss, step=episode_count)
