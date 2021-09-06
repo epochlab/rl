@@ -160,7 +160,7 @@ def train_threading(env, thread):
 
         if terminal:
             lock.acquire()
-            agent.learn_a3c(actor, critic, actions, states, rewards)
+            a_loss, c_loss = agent.learn_a3c(actor, critic, actions, states, rewards)
             lock.release()
 
             actions, states, rewards = [], [], []
@@ -182,18 +182,25 @@ def train_threading(env, thread):
             del episode_reward_history[:1]
         running_reward = np.mean(episode_reward_history)
 
-        if terminal:
-            print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward,max_life))
-
-        with summary_writer.as_default():
-            tf.summary.scalar('running_reward', running_reward, step=episode_count)
-            tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
-            tf.summary.scalar('max_life', max_life, step=episode_count)
-
         with lock:
+            if terminal:
+                print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward, a_loss, c_loss, max_life))
+
+            with summary_writer.as_default():
+                tf.summary.scalar('a_loss', a_loss, step=episode_count)
+                tf.summary.scalar('c_loss', c_loss, step=episode_count)
+                tf.summary.scalar('running_reward', running_reward, step=episode_count)
+                tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
+                tf.summary.scalar('max_life', max_life, step=episode_count)
+
             if terminal and running_reward > (min_reward + 1):
                 agent.save(actor, log_dir + timestamp)
                 min_reward = running_reward
+
+            if running_reward == config['min_max'][1]:
+                agent.save(actor, log_dir + timestamp)
+                print("Solved at episode {}!".format(episode_count))
+                break
 
         frame_count += 1
 

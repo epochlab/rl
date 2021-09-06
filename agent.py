@@ -273,7 +273,9 @@ class AsynchronousAgent:
         actor_history = actor.fit(states, actions, sample_weight=advantages, epochs=1, verbose=0)
         critic_history = critic.fit(states, discounted_r, epochs=1, verbose=0)
 
-        # return actor_history.history['loss'][0], critic_history.history['loss'][0]
+        a_loss = actor_history.history['loss'][0]
+        c_loss = critic_history.history['loss'][0]
+        return a_loss, c_loss
 
     def evaluate(self, model, log_dir, episode_id):
         terminal, state, info = self.SANDBOX.reset(self.ENV)
