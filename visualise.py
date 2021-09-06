@@ -25,7 +25,7 @@ print("Eager mode:", tf.executing_eagerly())
 # -----------------------------
 
 config = load_config('config.yml')['doom-dqn']
-log_dir = 'metrics/20210902-021628/'
+log_dir = 'metrics/20210903-153441/'
 
 dim = (640, 480)
 
@@ -92,7 +92,7 @@ def plot_value(values, counter, depth):
     s = np.array(counter)[-depth:]
     v = np.array(values)[-depth:]
 
-    fig = Figure()
+    fig = Figure(figsize=(15, 5), dpi=72)
     canvas = FigureCanvas(fig)
     ax = fig.gca()
 
@@ -105,6 +105,41 @@ def plot_value(values, counter, depth):
     frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return frame
 
+def view_depth(self, env):
+    state = env.get_state()
+    depth = state.depth_buffer
+    return depth
+
+def view_automap(self, env):
+    state = env.get_state()
+    automap = state.automap_buffer
+    automap = np.rollaxis(automap, 0, 3)
+    return automap
+
+def bounding_box(buffer, x, y, width, height, color):
+    for i in range(width):
+        buffer[y, x + i, :] = color
+        buffer[y + height, x + i, :] = color
+
+    for i in range(height):
+        buffer[y + i, x, :] = color
+        buffer[y + i, x + width, :] = color
+
+def color_labels(labels):
+    constant=np.stack([labels] * 3, -1)
+    constant[labels == 0] = [255,0,0]
+    constant[labels == 1] = [0,0,255]
+    return constant
+
+def view_class():
+    state = env.get_state()
+    labels = state.labels_buffer
+    if labels is not None:
+        seg = color_labels(labels)
+        for l in state.labels:
+            bounding_box(seg, l.x, l.y, l.width, l.height, doom_green_color)
+    return seg
+
 def witness(env, action_space, model):
     print("Witnessing...", log_dir)
     terminal, state, info = sandbox.reset(env)
@@ -116,6 +151,7 @@ def witness(env, action_space, model):
     state_buf = []
     depth_buf = []
     automap_buf = []
+    class_buf = []
 
     heatmap_buf = []
     attention_buf = []
@@ -128,8 +164,9 @@ def witness(env, action_space, model):
 
         human_buf.append(sandbox.view_human(env))
         state_buf.append(view_machine(state, 2))
-        depth_buf.append(sandbox.view_depth(env))
-        automap_buf.append(sandbox.view_automap(env))
+        depth_buf.append(view_depth(env))
+        automap_buf.append(view_automap(env))
+        class_buf.append(view_class())
 
         heatmap, comp = attention_comp(state)
         heatmap_buf.append(heatmap)
@@ -158,6 +195,7 @@ def witness(env, action_space, model):
     render_gif(state_buf, log_dir + 'viz_state')
     render_gif(depth_buf, log_dir + 'viz_depth')
     render_gif(automap_buf, log_dir + 'viz_automap')
+    render_gif(class_buf, log_dir + 'viz_class')
 
     render_gif(heatmap_buf, log_dir + 'viz_heatmap')
     render_gif(attention_buf, log_dir + 'viz_attention')
@@ -174,5 +212,9 @@ agent = DQNAgent(config, sandbox, env, action_space)
 model = load(log_dir)
 
 # -----------------------------
+
+doom_red_color = [0, 0, 203]
+doom_green_color = [0, 203, 0]
+doom_blue_color = [203, 0, 0]
 
 witness(env, action_space, model)
