@@ -94,6 +94,16 @@ def execute():
         if terminal:
             print("Frame: {}, Episode: {}, Reward: {}, Max Life: {}".format(frame_count, episode_count, running_reward, max_life))
 
+        if terminal and running_reward > (min_reward + 1):
+            agent.save(actor, log_dir + timestamp)
+            eval_reward = agent.evaluate(actor, (log_dir + timestamp), episode_count)
+            min_reward = running_reward
+
+        if running_reward == config['min_max'][1]:
+            agent.save(actor, log_dir + timestamp)
+            print("Solved at episode {}!".format(episode_count))
+            break
+
         frame_count += 1
 
     env.close()
@@ -179,6 +189,11 @@ def train_threading(env, thread):
             tf.summary.scalar('running_reward', running_reward, step=episode_count)
             tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
             tf.summary.scalar('max_life', max_life, step=episode_count)
+
+        with lock:
+            if terminal and running_reward > (min_reward + 1):
+                agent.save(actor, log_dir + timestamp)
+                min_reward = running_reward
 
         frame_count += 1
 
