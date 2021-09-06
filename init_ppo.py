@@ -71,7 +71,7 @@ def execute():
         predictions.append(prediction)
 
         if terminal:
-            agent.learn_ppo(actor, critic, actions, states, rewards, predictions)
+            a_loss, c_loss = agent.learn_ppo(actor, critic, actions, states, rewards, predictions)
 
             actions, states, rewards, predictions = [], [], [], []
 
@@ -93,7 +93,14 @@ def execute():
         running_reward = np.mean(episode_reward_history)
 
         if terminal:
-            print("Frame: {}, Episode: {}, Reward: {}, Max Life: {}".format(frame_count, episode_count, running_reward, max_life))
+            print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward, a_loss, c_loss, max_life))
+
+        with summary_writer.as_default():
+            tf.summary.scalar('a_loss', a_loss, step=episode_count)
+            tf.summary.scalar('c_loss', c_loss, step=episode_count)
+            tf.summary.scalar('running_reward', running_reward, step=episode_count)
+            tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
+            tf.summary.scalar('max_life', max_life, step=episode_count)
 
         if terminal and running_reward > (min_reward + 1):
             agent.save(actor, log_dir + timestamp)
