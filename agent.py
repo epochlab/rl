@@ -241,6 +241,13 @@ class AsynchronousAgent:
         action = np.random.choice(self.ACTION_SPACE, p=policy)
         return action
 
+    def policy_act(self, state, model):
+        state_tensor = tf.convert_to_tensor(state)
+        state_tensor = tf.expand_dims(state_tensor, 0)
+        policy = model.predict(state_tensor)[0]
+        action = np.random.choice(self.ACTION_SPACE, p=policy)
+        return action, policy
+
     def push(self, state, action_idx, reward):
         action = np.zeros([self.ACTION_SPACE])
         action[action_idx] = 1
@@ -272,6 +279,25 @@ class AsynchronousAgent:
 
         actor_history = actor.fit(states, actions, sample_weight=advantages, epochs=1, verbose=0)
         critic_history = critic.fit(states, discounted_r, epochs=1, verbose=0)
+
+        a_loss = actor_history.history['loss'][0]
+        c_loss = critic_history.history['loss'][0]
+        return a_loss, c_loss
+
+    def learn_ppo(self, actor, critic, actions, states, rewards, predictions):
+        actions = np.vstack(actions)
+        states = np.vstack(states)
+        predictions = np.vstack(predictions)
+
+        discounted_r = np.vstack(self.discount_rewards(rewards))
+
+        values = critic.predict(states)
+        advantages = discounted_r - values
+
+        y_true = np.hstack([advantages, predictions, actions])
+
+        actor_history = actor.fit(states, y_true, epochs=10, shuffle=True, batch_size=len(rewards), verbose=0)
+        critic_history = critic.fit(states, discounted_r, epochs=10, shuffle=True, batch_size=len(rewards), verbose=0)
 
         a_loss = actor_history.history['loss'][0]
         c_loss = critic_history.history['loss'][0]
