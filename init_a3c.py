@@ -70,7 +70,7 @@ def execute():
         rewards.append(reward)
 
         if terminal:
-            a_loss, c_loss = agent.learn_a3c(actor, critic, actions, states, rewards)
+            agent.learn_a3c(actor, critic, actions, states, rewards)
 
             actions, states, rewards = [], [], []
 
@@ -92,7 +92,7 @@ def execute():
         running_reward = np.mean(episode_reward_history)
 
         if terminal:
-            print("Frame: {}, Episode: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, running_reward, a_loss, c_loss, max_life))
+            print("Frame: {}, Episode: {}, Reward: {}, Max Life: {}".format(frame_count, episode_count, running_reward, max_life))
 
         frame_count += 1
 
@@ -150,7 +150,7 @@ def train_threading(env, thread):
 
         if terminal:
             lock.acquire()
-            a_loss, c_loss = agent.learn_a3c(actor, critic, actions, states, rewards)
+            agent.learn_a3c(actor, critic, actions, states, rewards)
             lock.release()
 
             actions, states, rewards = [], [], []
@@ -173,11 +173,9 @@ def train_threading(env, thread):
         running_reward = np.mean(episode_reward_history)
 
         if terminal:
-            print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Actor Loss: {}, Critic Loss: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward, a_loss, c_loss, max_life))
+            print("Frame: {}, Episode: {}, Thread: {}, Reward: {}, Max Life: {}".format(frame_count, episode_count, thread, running_reward,max_life))
 
         with summary_writer.as_default():
-            tf.summary.scalar('a_loss', a_loss, step=episode_count)
-            tf.summary.scalar('c_loss', c_loss, step=episode_count)
             tf.summary.scalar('running_reward', running_reward, step=episode_count)
             tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
             tf.summary.scalar('max_life', max_life, step=episode_count)
