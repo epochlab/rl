@@ -2,6 +2,8 @@
 
 **Project ID:** 0CxFIFGp
 
+![alt text](https://github.com/epochlab/rl/blob/main/sample.png)
+
 #### Reinforcement Learning
 Abstract: *Reinforcement learning is the field of computer science concerned with how agents, through trial and error, learn to operate within an environment in order to maximize a reward signal.*
 
