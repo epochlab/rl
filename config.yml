@@ -33,7 +33,7 @@
     epsilon_annealer: (epsilon_max - epsilon_min)
 
   doom-dqn:
-    env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/deadly_corridor.cfg"
+    env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
     visible: True
     reward_factor: 0.001
     min_max: [0, 100]
