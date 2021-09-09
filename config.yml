@@ -35,7 +35,7 @@
   doom-dqn:
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/defend_the_center.cfg"
     visible: True
-    reward_factor: 0.001
+    reward_factor: 1                                                            # Deadly corridor = 0.001
     min_max: [0, 100]
 
     input_shape: [84, 84]

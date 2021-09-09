@@ -12,7 +12,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from wrappers.doom import Sandbox
 from agent import DQNAgent
-from networks import dqn, dueling_dqn
 from utils import load_config, render_gif, load
 
 # -----------------------------
@@ -25,7 +24,7 @@ print("Eager mode:", tf.executing_eagerly())
 # -----------------------------
 
 config = load_config('config.yml')['doom-dqn']
-log_dir = 'metrics/20210903-153441/'
+log_dir = 'metrics/20210907-211452/'
 
 dim = (640, 480)
 
@@ -105,12 +104,12 @@ def plot_value(values, counter, depth):
     frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return frame
 
-def view_depth(self, env):
+def view_depth(env):
     state = env.get_state()
     depth = state.depth_buffer
     return depth
 
-def view_automap(self, env):
+def view_automap(env):
     state = env.get_state()
     automap = state.automap_buffer
     automap = np.rollaxis(automap, 0, 3)
@@ -211,10 +210,11 @@ terminal, state, info = sandbox.reset(env)
 agent = DQNAgent(config, sandbox, env, action_space)
 model = load(log_dir)
 
-# -----------------------------
-
 doom_red_color = [0, 0, 203]
 doom_green_color = [0, 203, 0]
 doom_blue_color = [203, 0, 0]
 
+# -----------------------------
+
+# filter_summary(model)
 witness(env, action_space, model)
