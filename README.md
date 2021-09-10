@@ -12,10 +12,10 @@ Abstract: *Reinforcement learning is the field of computer science concerned wit
 - Policy Gradient: REINFORCE | Advantage Actor-Critic (A2C)
 - Vizualisation: Engine Buffers | Attention Window | Neural Heatmap | Q-Confidence Plot
 
-- In-Development: Asynchronous Advantage Actor Critic (A3C) | Proximal Policy Optimization (PPO)
++ In-Development: Asynchronous Advantage Actor Critic (A3C) | Proximal Policy Optimization (PPO)
 
 ### Packages
-`gym` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib` `yaml`
+`gym[atari]` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib` `yaml`
 
 ### Environments
 - OpenAI Gym
