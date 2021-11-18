@@ -21,7 +21,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['doom-dqn']
+config = load_config('config.yml')['doom-dqn-deadly_corridor']
 log_dir = "metrics/"
 
 # -----------------------------
@@ -115,13 +115,13 @@ while True:
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
         tf.summary.scalar('max_life', max_life, step=episode_count)
 
-    if terminal and running_reward > (min_reward + 0.1):
-        agent.save(model, model_target, log_dir + timestamp)
+    if terminal and running_reward > (min_reward + 0.1) or episode_count % 10 = 1:
+        agent.save(model, model_target, log_dir + timestamp, episode_count)
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
     if running_reward == config['min_max'][1]:
-        agent.save(model, model_target, log_dir + timestamp)
+        agent.save(model, model_target, log_dir + timestamp, episode_count)
         print("Solved at episode {}!".format(episode_count))
         break
 

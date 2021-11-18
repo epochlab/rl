@@ -132,6 +132,6 @@ class DQNAgent:
         render_gif(frames, log_dir + "/loop_" + str(episode_id) + "_" + str(episode_reward))
         return episode_reward
 
-    def save(self, model, model_target, outdir):
-        model.save(outdir + '/model.h5')
-        model_target.save(outdir + '/model_target.h5')
+    def save(self, model, model_target, outdir, episode):
+        model.save(outdir + '/model_' + str(episode) + '.h5')
+        model_target.save(outdir + '/model_target_' + str(episode) + '.h5')
