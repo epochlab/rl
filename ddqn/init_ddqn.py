@@ -115,7 +115,7 @@ while True:
         tf.summary.scalar('eval_reward', eval_reward, step=episode_count)
         tf.summary.scalar('max_life', max_life, step=episode_count)
 
-    if terminal and running_reward > (min_reward + 0.1) or episode_count % 10 = 1:
+    if terminal and running_reward > (min_reward + 0.1) or terminal and episode_count % 100 == 1:
         agent.save(model, model_target, log_dir + timestamp, episode_count)
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
