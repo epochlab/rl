@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-
+import sys
+sys.path.append('..')
 
 import cv2
 import numpy as np
@@ -13,7 +14,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from wrappers.doom import Sandbox
-from ddqn.agent import DQNAgent
+from agent import DQNAgent
 from utils import load_config, render_gif, load
 
 # -----------------------------
@@ -25,8 +26,8 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('ddqn/config.yml')['doom-dqn-deadly_corridor']
-log_dir = 'ddqn/metrics/20211118-212501a/'
+config = load_config('config.yml')['doom-dqn-deadly_corridor']
+log_dir = 'metrics/20211118-212501/'
 
 dim = (640, 480)
 
