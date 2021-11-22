@@ -70,7 +70,7 @@ def attention_window(frame, model):
         attention = tf.reduce_mean(tf.multiply(pooled_grads, conv_layer), axis=-1)
 
         atten_map = np.maximum(attention, 0) / np.max(attention)
-        atten_map = atten_map.reshape((39, 29))
+        atten_map = atten_map.reshape((20, 20))
         atten_map = cv2.resize(atten_map, dim, interpolation=cv2.INTER_AREA)
         atten_map = np.uint8(atten_map * 255.0)
         atten_map = np.expand_dims(atten_map, axis=0)

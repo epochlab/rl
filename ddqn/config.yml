@@ -71,7 +71,7 @@
     reward_factor: 0.001
     min_max: [0, 10]
 
-    input_shape: [160, 120]
+    input_shape: [84, 84]
     window_length: 4
     fps: 4
     grade: False
