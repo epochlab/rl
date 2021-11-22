@@ -120,7 +120,7 @@ while True:
         eval_reward = agent.evaluate(model, (log_dir + timestamp), episode_count)
         min_reward = running_reward
 
-    if running_reward == config['min_max'][1]:
+    if eval_reward >= config['min_max'][1]:
         agent.save(model, model_target, log_dir + timestamp, episode_count)
         print("Solved at episode {}!".format(episode_count))
         break
