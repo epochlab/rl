@@ -21,7 +21,7 @@ print("Eager mode:", tf.executing_eagerly())
 
 # -----------------------------
 
-config = load_config('config.yml')['doom-dqn-deadly_corridor']
+config = load_config('config.yml')['doom-dqn-defend_the_center']
 log_dir = "metrics/"
 
 # -----------------------------
