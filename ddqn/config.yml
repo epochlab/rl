@@ -69,7 +69,7 @@
     env_name: "/mnt/vanguard/git/ViZDoom-master/scenarios/health_gathering.cfg"
     visible: True
     reward_factor: 0.001
-    min_max: [0, 1000]
+    min_max: [0, 50]
 
     input_shape: [84, 84]
     window_length: 4
