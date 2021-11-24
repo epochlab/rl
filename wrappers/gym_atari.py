@@ -46,38 +46,6 @@ class Sandbox:
             state = self.framestack(frame)
         return terminal, state, info
 
-    # def step(self, env, action, _): # 3rd input used in Doom (prev_info)
-    #     if self.VISIBLE:
-    #         env.render()
-    #
-    #     next_state, reward, terminal, info = env.step(action)
-    #     next_state = self.framestack(next_state)
-    #     reward = self.shape_reward(reward)
-    #
-    #     if terminal:
-    #         _, state, info = self.reset(env)
-    #         terminal = True
-    #
-    #     return next_state, reward, terminal, info
-
-    # def step(self, env, action, _): # 3rd input used in Doom (prev_info)
-    #     if self.VISIBLE:
-    #         env.render()
-    #
-    #     total_reward = 0.0
-    #     for i in range(self.FPS):
-    #         next_state, reward, terminal, info = env.step(action)
-    #         total_reward += reward
-    #         if terminal:
-    #             _, state, info = self.reset(env)
-    #             terminal = True
-    #             break
-    #
-    #     next_state = self.framestack(next_state)
-    #     total_reward = self.shape_reward(total_reward)
-    #
-    #     return next_state, total_reward, terminal, info
-
     def step(self, env, action, prev_info):
         if self.VISIBLE:
             env.render()
@@ -107,7 +75,3 @@ class Sandbox:
     def view_human(self, env):
         frame = env.render(mode='rgb_array')
         return frame
-
-# import imageio
-# frame = np.uint8(frame)
-# imageio.imsave('test.png', frame)
