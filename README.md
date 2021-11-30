@@ -14,7 +14,7 @@ Abstract: *Reinforcement learning is the field of computer science concerned wit
 - Development: Asynchronous Advantage Actor Critic (A3C) | Proximal Policy Optimization (PPO)
 
 ### Publish
-[DOOM: Scenario](https://vimeo.com/649753590) | [DOOM: Feedback](https://vimeo.com/649624495) | [Atari: Pong](https://vimeo.com/649229501)
+[DOOM: Scenario](https://vimeo.com/649753590) || [DOOM: Feedback](https://vimeo.com/649624495) || [Atari: Pong](https://vimeo.com/649229501)
 
 ### Packages
 `gym[atari]` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib` `yaml`
