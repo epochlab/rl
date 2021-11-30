@@ -13,6 +13,9 @@ Abstract: *Reinforcement learning is the field of computer science concerned wit
 - Vizualisation: Engine Buffers | Attention Window | Neural Heatmap | Q-Confidence Plot
 - Development: Asynchronous Advantage Actor Critic (A3C) | Proximal Policy Optimization (PPO)
 
+### Publish
+[Feedback](https://vimeo.com/649624495) || [Scenario](https://vimeo.com/649753590)
+
 ### Packages
 `gym[atari]` `vizdoom` `tensorflow-2.x` `numpy` `imageio` `matplotlib` `yaml`
 
