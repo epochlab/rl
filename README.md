@@ -10,7 +10,7 @@ Abstract: *Reinforcement learning is the field of computer science concerned wit
 ### Build
 - Deep Q-Network: DQN | DoubleDQN | DuelingDQN | Prioritized Experience Replay | Fixed & Soft Targets
 - Policy Gradient: REINFORCE | Advantage Actor-Critic (A2C)
-- Vizualisation: Engine Buffers | Attention Window | Neural Heatmap | Q-Confidence Plot
+- Vizualisation: Engine Buffers | Attention Window | Saliency Heatmap | Q-Confidence Plot
 - Development: Asynchronous Advantage Actor Critic (A3C) | Proximal Policy Optimization (PPO)
 
 ### Publish
